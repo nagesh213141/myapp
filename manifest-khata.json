@@ -1,0 +1,12 @@
+{
+  "short_name": "बही खाता",
+  "name": "बही खाता - उधारी व्यवस्थापन",
+  "icons": [
+    { "src": "icon-khata-192.png", "type": "image/png", "sizes": "192x192" },
+    { "src": "icon-khata-512.png", "type": "image/png", "sizes": "512x512" }
+  ],
+  "start_url": "./udhari-khata-v4-3-1.html",
+  "background_color": "#0d1b2a",
+  "theme_color": "#0d1b2a",
+  "display": "standalone"
+}

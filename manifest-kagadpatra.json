@@ -1,0 +1,12 @@
+{
+  "short_name": "कागदपत्र वॉलेट",
+  "name": "कागदपत्र वॉलेट",
+  "icons": [
+    { "src": "icon-kagadpatra-192.png", "type": "image/png", "sizes": "192x192" },
+    { "src": "icon-kagadpatra-512.png", "type": "image/png", "sizes": "512x512" }
+  ],
+  "start_url": "./kagadpatra-wallet-15-1.html",
+  "background_color": "#4123D0",
+  "theme_color": "#4123D0",
+  "display": "standalone"
+}
