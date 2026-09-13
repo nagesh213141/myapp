@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>शाळा व्यवस्थापन</title>
+<link rel="manifest" href="manifest-shala.json">
+<meta name="theme-color" content="#0d1b2a">
+<style>
+  :root{
+    --bg:#0d1b2a; --surface:#15293b; --surface2:#1d3550; --line:#2f4a63;
+    --white:#ffffff; --muted:#b9c7d4;
+    --red:#ff6b6b; --red-bg:#3d1a1a;
+    --green:#5fd394; --green-bg:#0f3324;
+    --gold:#ffca28; --gold-bg:#3a2f0a;
+    --blue:#5cb3ff; --blue-bg:#0f2a45;
+    --purple:#c3a2ff; --purple-bg:#251a3f;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Noto Sans','Segoe UI',sans-serif;background:var(--bg);color:var(--white);font-size:16px;}
+  .app{max-width:460px;margin:0 auto;min-height:100vh;background:var(--bg);}
+  .topbar{background:var(--surface2);padding:18px 20px 20px;border-bottom:2px solid var(--line);position:relative;}
+  .topbar h1{font-size:20px;margin:0;font-weight:700;}
+  .topbar p{margin:5px 0 0;font-size:13.5px;color:var(--muted);}
+  .roletag{position:absolute;top:18px;right:20px;font-size:12px;background:var(--gold-bg);border:1px solid var(--gold);color:var(--gold);padding:6px 12px;border-radius:20px;font-weight:700;}
+  .logoutlink{font-size:12px;color:var(--muted);text-decoration:underline;cursor:pointer;margin-top:8px;display:inline-block;}
+  .menuscroll{display:flex;overflow-x:auto;background:var(--surface);border-bottom:2px solid var(--line);white-space:nowrap;-webkit-overflow-scrolling:touch;}
+  .menuscroll::-webkit-scrollbar{display:none;}
+  .mitem{flex-shrink:0;padding:14px 15px;color:var(--muted);font-size:14.5px;font-weight:700;cursor:pointer;border-bottom:4px solid transparent;}
+  .mitem.active{color:var(--gold);border-bottom:4px solid var(--gold);background:rgba(255,202,40,0.08);}
+  .content{padding:16px;padding-bottom:100px;}
+  .notice{background:var(--blue-bg);border:2px solid var(--blue);border-radius:10px;padding:14px;margin-bottom:16px;}
+  .notice p{margin:0;font-size:15px;color:var(--white);font-weight:600;}
+  .classrow{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch;}
+  .classrow::-webkit-scrollbar{display:none;}
+  .classbtn{flex-shrink:0;padding:10px 18px;border:2px solid var(--line);border-radius:20px;background:var(--surface);color:var(--muted);font-size:14.5px;font-weight:700;}
+  .classbtn.active{border-color:var(--gold);color:var(--gold);background:var(--gold-bg);}
+  .dateline{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+  .dateline .dt{font-size:16.5px;font-weight:700;}
+  .summary{display:flex;gap:10px;margin-bottom:16px;}
+  .card{background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:14px;flex:1;text-align:center;}
+  .card .lbl{font-size:12.5px;color:var(--muted);margin:0 0 6px;font-weight:600;}
+  .card .val{font-size:22px;font-weight:800;margin:0;}
+  .val.give{color:var(--red);} .val.get{color:var(--green);}
+  .stud{display:flex;align-items:center;gap:14px;padding:14px 10px;border:2px solid var(--line);border-radius:10px;margin-bottom:10px;background:var(--surface);cursor:pointer;}
+  .stud.absent{border-color:var(--red);background:var(--red-bg);}
+  .stud.present{border-color:var(--green);}
+  .avatar{width:44px;height:44px;border-radius:50%;background:var(--surface2);border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0;color:var(--white);}
+  .stud.absent .avatar{background:var(--red-bg);border-color:var(--red);color:var(--red);}
+  .stud.present .avatar{background:var(--green-bg);border-color:var(--green);color:var(--green);}
+  .stud-info{flex:1;min-width:0;}
+  .stud-name{font-size:16.5px;font-weight:700;margin:0;color:var(--white);}
+  .stud-roll{font-size:12.5px;color:var(--muted);margin:2px 0 0;}
+  .statuslbl{font-size:13.5px;font-weight:800;padding:6px 12px;border-radius:8px;}
+  .statuslbl.present{color:var(--green);background:var(--green-bg);}
+  .statuslbl.absent{color:var(--red);background:var(--red-bg);}
+  .empty{text-align:center;padding:50px 20px;color:var(--muted);font-size:16px;line-height:1.6;}
+  .btn{padding:15px;border-radius:8px;border:none;font-size:16px;font-weight:700;cursor:pointer;}
+  .btn.primary{background:var(--gold);color:#12130c;}
+  .btn.ghost{background:var(--surface2);color:var(--white);border:2px solid var(--line);}
+  .btn.danger{background:var(--red-bg);color:var(--red);border:2px solid var(--red);}
+  .btn.wide{width:100%;}
+  .btn.small{padding:9px 14px;font-size:13.5px;}
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:flex-end;justify-content:center;z-index:50;}
+  .sheet{background:var(--surface);width:100%;max-width:460px;border-radius:18px 18px 0 0;padding:22px;max-height:85vh;overflow-y:auto;border-top:3px solid var(--gold);}
+  .sheet h3{margin:0 0 16px;font-size:20px;font-weight:700;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:14px;color:var(--muted);margin-bottom:6px;font-weight:600;}
+  .field input,.field textarea,.field select{width:100%;padding:14px;border:2px solid var(--line);border-radius:8px;font-size:16px;background:var(--surface2);color:var(--white);}
+  .field textarea{resize:vertical;min-height:70px;}
+  .err{color:var(--red);font-size:13.5px;margin-top:-8px;margin-bottom:12px;display:none;font-weight:600;}
+  .sheetbtns{display:flex;gap:10px;margin-top:8px;}
+  .adminpad{background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px;}
+  .adminpad h4{margin:0 0 12px;font-size:16.5px;font-weight:700;color:var(--white);}
+  .adminpad p.hint{font-size:13.5px;color:var(--muted);margin:0 0 12px;line-height:1.5;}
+  .helpline{font-size:13px;color:var(--muted);text-align:center;margin-top:10px;line-height:1.6;}
+  .repcard{background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:16px;margin-bottom:12px;}
+  .repcard .rtitle{font-size:14px;color:var(--muted);margin:0 0 6px;font-weight:600;}
+  .repcard .rval{font-size:24px;font-weight:800;margin:0;}
+  .lowrow{display:flex;justify-content:space-between;align-items:center;padding:12px;border:1px solid var(--line);border-radius:8px;margin-bottom:8px;font-size:14.5px;background:var(--surface);gap:10px;}
+  .lowrow.danger{border-color:var(--red);background:var(--red-bg);}
+  .subjrow{display:flex;gap:8px;margin-bottom:10px;align-items:center;}
+  .subjrow input{flex:1;padding:10px;border:2px solid var(--line);border-radius:8px;background:var(--surface2);color:var(--white);font-size:15px;}
+  .tag{display:inline-block;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:12px;margin-right:6px;}
+  .tag.exam{background:var(--purple-bg);color:var(--purple);}
+  .tag.fee-paid{background:var(--green-bg);color:var(--green);}
+  .tag.fee-due{background:var(--red-bg);color:var(--red);}
+  .tag.event{background:var(--blue-bg);color:var(--blue);}
+  .tag.msg{background:var(--purple-bg);color:var(--purple);}
+  .roleCard{background:var(--surface);border:2px solid var(--line);border-radius:12px;padding:20px;margin-bottom:16px;text-align:left;cursor:pointer;}
+  .roleCard h3{margin:0 0 6px;font-size:17px;color:var(--white);}
+  .roleCard p{margin:0;font-size:13.5px;color:var(--muted);}
+  .backbtn{background:var(--red-bg);border:2px solid var(--red);color:var(--red);font-size:15px;font-weight:800;margin-bottom:18px;cursor:pointer;padding:10px 18px;border-radius:8px;display:inline-flex;align-items:center;gap:8px;}
+  .msgbox{background:var(--surface);border:2px solid var(--purple);border-radius:10px;padding:14px;margin-bottom:12px;}
+  .msgbox .mtitle{font-weight:700;font-size:15px;margin:0 0 4px;color:var(--white);}
+  .msgbox .mmeta{font-size:12px;color:var(--muted);margin:0 0 8px;}
+  .msgbox .mbody{font-size:14.5px;color:var(--white);white-space:pre-wrap;}
+  .permrow{display:flex;justify-content:space-between;align-items:center;padding:14px;border:2px solid var(--line);border-radius:10px;margin-bottom:10px;background:var(--surface);}
+  .permrow span{font-size:15px;font-weight:600;}
+  .toggle{width:52px;height:30px;border-radius:20px;position:relative;cursor:pointer;flex-shrink:0;}
+  .toggle.on{background:var(--green);}
+  .toggle.off{background:var(--line);}
+  .toggle .knob{position:absolute;top:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:left 0.15s;}
+  .toggle.on .knob{left:25px;}
+  .toggle.off .knob{left:3px;}
+  .permsection{font-size:13px;color:var(--gold);font-weight:800;margin:18px 0 10px;text-transform:uppercase;letter-spacing:0.5px;}
+</style>
+</head>
+<body>
+<div class="app" id="appRoot"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBHv84rGeY9xJAQXJpRUNHzlSyjfRBLGF4",
+  authDomain: "myapp-f8caa.firebaseapp.com",
+  projectId: "myapp-f8caa",
+  storageBucket: "myapp-f8caa.firebasestorage.app",
+  messagingSenderId: "437363677556",
+  appId: "1:437363677556:web:ec0d13aa4f418e95e8b421",
+  measurementId: "G-Q89N506MT0"
+};
+firebase.initializeApp(firebaseConfig);
+const fbDb = firebase.firestore();
+
+window.storage = {
+  async get(key, shared){
+    if(!shared){
+      const v = localStorage.getItem(key);
+      if(v===null) throw new Error('not found: '+key);
+      return {key, value:v, shared:false};
+    } else {
+      const doc = await fbDb.collection('app_data').doc(key).get();
+      if(!doc.exists) throw new Error('not found: '+key);
+      return {key, value:doc.data().value, shared:true};
+    }
+  },
+  async set(key, value, shared){
+    if(!shared){
+      localStorage.setItem(key, value);
+      return {key, value, shared:false};
+    } else {
+      await fbDb.collection('app_data').doc(key).set({value:value});
+      return {key, value, shared:true};
+    }
+  },
+  async delete(key, shared){
+    if(!shared){
+      localStorage.removeItem(key);
+    } else {
+      await fbDb.collection('app_data').doc(key).delete();
+    }
+    return {key, deleted:true, shared:!!shared};
+  },
+  async list(prefix, shared){
+    if(!shared){
+      const keys = [];
+      for(let i=0;i<localStorage.length;i++){ const k = localStorage.key(i); if(!prefix || k.startsWith(prefix)) keys.push(k); }
+      return {keys, prefix, shared:false};
+    } else {
+      let q = fbDb.collection('app_data');
+      const snap = await q.get();
+      const keys = [];
+      snap.forEach(d=>{ if(!prefix || d.id.startsWith(prefix)) keys.push(d.id); });
+      return {keys, prefix, shared:true};
+    }
+  }
+};
+
+let school = null;
+let session = { role:null, studentId:null };
+let currentTab = 'attend';
+let currentClassIdx = 0;
+let selectedStudentId = null;
+let todayKey = null;
+let examSubjectRows = [];
+
+function pad(n){ return String(n).padStart(2,'0'); }
+function dateKey(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function todayStr(){ return dateKey(new Date()); }
+const MONTHS = ['जाने','फेब्रु','मार्च','एप्रिल','मे','जून','जुलै','ऑग','सप्टें','ऑक्टो','नोव्हें','डिसें'];
+function displayDate(key){ const [y,m,d] = key.split('-'); return parseInt(d)+' '+MONTHS[parseInt(m)-1]+' '+y; }
+function todayDisplay(){ return displayDate(todayStr()); }
+function fmt(n){ return '₹' + Math.round(n).toLocaleString('en-IN'); }
+function genId(){ return String(Math.floor(1000+Math.random()*9000)); }
+
+const DEFAULT_SUPER_ADMIN_PASS = 'platform123';
+async function getSuperAdminPass(){
+  try{ const r = await window.storage.get('super-admin-pass', true); if(r&&r.value) return r.value; }catch(e){}
+  return DEFAULT_SUPER_ADMIN_PASS;
+}
+async function setSuperAdminPass(newPass){ try{ await window.storage.set('super-admin-pass', newPass, true); }catch(e){} }
+let demoMode = false;
+let demoReturn = null;
+let demoSchools = {};
+let demoDirectory = [];
+async function getMySchoolId(){ try{ const r = await window.storage.get('my-school-id4', false); if(r&&r.value) return r.value; }catch(e){} return null; }
+async function setMySchoolId(id){ try{ await window.storage.set('my-school-id4', id, false); }catch(e){} }
+async function loadSchool(id){ if(demoMode) return demoSchools[id] || null; try{ const r = await window.storage.get('school4-'+id, true); if(r&&r.value) return JSON.parse(r.value); }catch(e){} return null; }
+async function saveSchool(){ if(demoMode){ demoSchools[school.id] = school; return; } try{ await window.storage.set('school4-'+school.id, JSON.stringify(school), true); }catch(e){} }
+async function loadDirectory(){ if(demoMode) return demoDirectory; try{ const r = await window.storage.get('school-directory4', true); if(r&&r.value) return JSON.parse(r.value); }catch(e){} return []; }
+async function saveDirectory(list){ if(demoMode){ demoDirectory = list; return; } try{ await window.storage.set('school-directory4', JSON.stringify(list), true); }catch(e){} }
+async function addToDirectory(id,name,billingCycle,lastPaidDate){ const dir = await loadDirectory(); dir.push({id,name,active:true,billingCycle:billingCycle||'monthly',lastPaidDate:lastPaidDate||todayStr()}); await saveDirectory(dir); }
+function addMonths(dateStr,n){ const d=new Date(dateStr); d.setMonth(d.getMonth()+n); return dateKey(d); }
+function addYears(dateStr,n){ const d=new Date(dateStr); d.setFullYear(d.getFullYear()+n); return dateKey(d); }
+function nextDueDate(entry){ if(!entry.lastPaidDate) return null; return entry.billingCycle==='yearly' ? addYears(entry.lastPaidDate,1) : addMonths(entry.lastPaidDate,1); }
+function isFeeOverdue(entry){ const nd = nextDueDate(entry); if(!nd) return true; return todayStr() > nd; }
+async function updateDirectoryEntry(id,fields){ const dir = await loadDirectory(); const it = dir.find(x=>x.id===id); if(it) Object.assign(it,fields); await saveDirectory(dir); }
+
+async function initApp(){
+  demoMode = false;
+  const id = await getMySchoolId();
+  if(id){ const s = await loadSchool(id); if(s){ school = s; ensureDefaults(); todayKey = todayStr(); showRoleLanding(); return; } }
+  showFirstTimeSetup();
+}
+function ensureDefaults(){
+  if(!school.teacherPerms) school.teacherPerms = { students:true, holidays:true, progress:true, fees:true, events:true, parentmsg:true, studentmsg:true };
+  if(!school.studentPerms) school.studentPerms = { myprogress:true, myfees:true, myevents:true, myparentmsg:true, mysend:true };
+  if(!school.teacherNotices) school.teacherNotices = [];
+}
+
+function showFirstTimeSetup(){
+  const root = document.getElementById('appRoot');
+  root.innerHTML = `
+  <div style="padding:50px 24px;text-align:center;">
+    <h1 style="font-size:24px;margin:0 0 8px;">शाळा व्यवस्थापन ॲप</h1>
+    <p style="color:var(--muted);font-size:15px;margin:0 0 28px;">प्लॅटफॉर्म मालकाने (सुपर ॲडमिनने) दिलेला शाळा आयडी टाका.</p>
+    <div class="field" style="text-align:left;"><input type="text" id="schoolIdEntry" placeholder="शाळा आयडी" style="text-align:center;"></div>
+    <button class="btn primary wide" id="startBtn">पुढे जा</button>
+    <p class="err" id="schoolIdErr" style="display:none;margin-top:14px;">हा शाळा आयडी सापडला नाही, ॲडमिनला विचारा.</p>
+    <p style="margin:22px 0 10px;font-size:13px;color:var(--muted);">किंवा आधी डेमो बघा (काहीही टाइप न करता):</p>
+    <button class="btn ghost wide" id="demoAdminBtn" style="margin-bottom:8px;">ॲडमिन डेमो बघा</button>
+    <button class="btn ghost wide" id="demoTeacherBtn" style="margin-bottom:8px;">शिक्षक डेमो बघा</button>
+    <button class="btn ghost wide" id="demoStudentBtn" style="margin-bottom:8px;">विद्यार्थी डेमो बघा</button>
+    <button class="btn ghost wide" id="demoSuperBtn">सुपर ॲडमिन डेमो बघा</button>
+    <p style="margin-top:20px;font-size:13px;color:var(--muted);">प्लॅटफॉर्म मालक आहात? <span id="goSuperReal" style="color:var(--gold);text-decoration:underline;cursor:pointer;">खरा सुपर ॲडमिन प्रवेश</span></p>
+  </div>`;
+  document.getElementById('demoAdminBtn').onclick = demoAsAdmin;
+  document.getElementById('demoTeacherBtn').onclick = demoAsTeacher;
+  document.getElementById('demoStudentBtn').onclick = demoAsStudent;
+  document.getElementById('demoSuperBtn').onclick = demoAsSuperAdmin;
+  document.getElementById('goSuperReal').onclick = showSuperAdminLogin;
+  document.getElementById('startBtn').onclick = async ()=>{
+    demoMode = false;
+    const id = document.getElementById('schoolIdEntry').value.trim();
+    const s = await loadSchool(id);
+    if(!s){ document.getElementById('schoolIdErr').style.display='block'; return; }
+    school = s; ensureDefaults();
+    await setMySchoolId(id);
+    todayKey = todayStr();
+    showRoleLanding();
+  };
+}
+
+function buildDemoSchoolObject(id, name){
+  const today = todayStr();
+  const yesterday = dateKey(new Date(Date.now()-86400000));
+  const dayBefore = dateKey(new Date(Date.now()-2*86400000));
+  return {
+    id, name, adminPass:'1234', teacherCode:'1234', active:true,
+    notice:{text:'उद्या शाळेत विज्ञान प्रदर्शन आहे, सर्वांनी उपस्थित राहावे.', active:true},
+    holidays:[{date:'2026-10-02', name:'गांधी जयंती'}],
+    events:[{id:'ev1', name:'वार्षिक स्नेहसंमेलन', date:'2026-12-15', desc:'सकाळी १० वाजता शाळेच्या पटांगणावर, सर्व पालकांना आमंत्रण.'}],
+    parentMessages:[],
+    studentMessages:[{id:'sm1', studentId:'s1', studentName:'सचिन जाधव', className:'इयत्ता ५ वी अ', type:'रजेची विनंती', text:'उद्या डॉक्टरकडे जायचं आहे, रजा द्यावी.', date:yesterday, reply:''}],
+    teacherNotices:[{id:'tn1', title:'शुक्रवारी शिक्षक बैठक', body:'शुक्रवारी दुपारी ३ वाजता स्टाफ रूममध्ये बैठक आहे.', date:yesterday}],
+    teacherPerms:{ students:true, holidays:true, progress:true, fees:true, events:true, parentmsg:true, studentmsg:true },
+    studentPerms:{ myprogress:true, myfees:true, myevents:true, myparentmsg:true, mysend:true },
+    classes:[
+      {
+        id:'cl1', name:'इयत्ता ५ वी अ',
+        parentMessages:[{id:'pm1', title:'या आठवड्याचा अभ्यासक्रम', body:'गणित: अपूर्णांक, मराठी: धडा ४ वाचन. कृपया सराव करून घ्यावा.', date:yesterday}],
+        students:[
+          { id:'s1', name:'सचिन जाधव', roll:'1', phone:'9876543210', attendance:{[dayBefore]:true,[yesterday]:false,[today]:true}, exams:[{id:'ex1', name:'सहामाही परीक्षा', subjects:[{name:'गणित',marks:'72',max:'100'},{name:'मराठी',marks:'80',max:'100'},{name:'विज्ञान',marks:'65',max:'100'}]}], fees:[{id:'f1',type:'शालेय फी',amount:'2000',paid:true},{id:'f2',type:'परीक्षा फी',amount:'300',paid:false}], behavior:'वर्गात लक्षपूर्वक ऐकतो, शिस्तप्रिय आहे.', sports:'खो-खो स्पर्धेत सहभाग.' },
+          { id:'s2', name:'प्रिया पवार', roll:'2', phone:'9876543211', attendance:{[dayBefore]:true,[yesterday]:true,[today]:true}, exams:[{id:'ex2', name:'सहामाही परीक्षा', subjects:[{name:'गणित',marks:'90',max:'100'},{name:'मराठी',marks:'95',max:'100'},{name:'विज्ञान',marks:'88',max:'100'}]}], fees:[{id:'f3',type:'शालेय फी',amount:'2000',paid:true}], behavior:'हुशार आणि नियमित विद्यार्थिनी.', sports:'धावण्याच्या स्पर्धेत प्रथम क्रमांक.' },
+          { id:'s3', name:'रोहन शिंदे', roll:'3', phone:'', attendance:{[dayBefore]:false,[yesterday]:false,[today]:true}, exams:[], fees:[{id:'f4',type:'देणगी',amount:'500',paid:false}], behavior:'', sports:'' }
+        ]
+      },
+      { id:'cl2', name:'इयत्ता ६ वी ब', parentMessages:[], students:[
+          { id:'s4', name:'अनिता कदम', roll:'1', phone:'9876543212', attendance:{[today]:true}, exams:[], fees:[], behavior:'', sports:'' }
+      ]}
+    ]
+  };
+}
+async function ensureDemoSchool(id, name, billingCycle, lastPaidDate){
+  let s = await loadSchool(id);
+  if(!s){
+    s = buildDemoSchoolObject(id, name);
+    if(demoMode){ demoSchools[id] = s; } else { await window.storage.set('school4-'+id, JSON.stringify(s), true); }
+    const dir = await loadDirectory();
+    if(!dir.find(x=>x.id===id)){ dir.push({id, name, active:true, billingCycle, lastPaidDate}); await saveDirectory(dir); }
+  }
+  return s;
+}
+async function demoAsAdmin(viaSuper){
+  demoMode = true;
+  school = await ensureDemoSchool('demo1','आदर्श विद्या मंदिर (डेमो)','monthly',todayStr());
+  ensureDefaults(); todayKey = todayStr(); session = {role:'admin', viaSuperAdmin:!!viaSuper}; renderRoot();
+}
+async function demoAsTeacher(viaSuper){
+  demoMode = true;
+  school = await ensureDemoSchool('demo1','आदर्श विद्या मंदिर (डेमो)','monthly',todayStr());
+  ensureDefaults(); todayKey = todayStr(); session = {role:'teacher', viaSuperAdmin:!!viaSuper}; renderRoot();
+}
+async function demoAsStudent(viaSuper){
+  demoMode = true;
+  school = await ensureDemoSchool('demo1','आदर्श विद्या मंदिर (डेमो)','monthly',todayStr());
+  ensureDefaults(); todayKey = todayStr();
+  session = {role:'student', studentId:'s1', classIdx:0, viaSuperAdmin:!!viaSuper};
+  currentClassIdx = 0;
+  renderRoot();
+}
+async function demoAsSuperAdmin(){
+  demoMode = true;
+  await ensureDemoSchool('demo1','आदर्श विद्या मंदिर (डेमो)','monthly',todayStr());
+  await ensureDemoSchool('demo2','सूर्योदय हायस्कूल (डेमो - थकीत फी)','monthly', addMonths(todayStr(),-2));
+  showSuperAdminPanel();
+}
+
+function showRoleLanding(){
+  const root = document.getElementById('appRoot');
+  if(school.active===false){
+    root.innerHTML = `<div style="padding:50px 24px;text-align:center;">
+      <h1 style="font-size:22px;margin:0 0 12px;color:var(--red);">सेवा सध्या बंद आहे</h1>
+      <p style="color:var(--muted);font-size:14.5px;line-height:1.7;margin:0 0 24px;">${school.name} या शाळेची सेवा तात्पुरती स्थगित करण्यात आली आहे. कृपया प्लॅटफॉर्म पुरवठादाराशी संपर्क साधा.</p>
+      <p style="font-size:13px;color:var(--muted);">प्लॅटफॉर्म मालक? <span id="goSuperLocked" style="color:var(--gold);text-decoration:underline;cursor:pointer;">सुपर ॲडमिन प्रवेश</span></p>
+    </div>`;
+    document.getElementById('goSuperLocked').onclick = showSuperAdminLogin;
+    return;
+  }
+  root.innerHTML = `
+  <div style="padding:40px 24px;text-align:center;">
+    <h1 style="font-size:24px;margin:0 0 6px;">${school.name}</h1>
+    <p style="color:var(--muted);font-size:14px;margin:0 0 28px;">तुम्ही कोण आहात ते निवडा</p>
+    <div class="roleCard" id="pickAdmin"><h3>ॲडमिन (मुख्याध्यापक)</h3><p>वर्ग व्यवस्थापन, शिक्षक/विद्यार्थी परवानग्या, सगळे अधिकार.</p></div>
+    <div class="roleCard" id="pickTeacher"><h3>शिक्षक</h3><p>हजेरी, प्रगती, फी, संदेश — रोजचं काम.</p></div>
+    <div class="roleCard" id="pickStudent"><h3>विद्यार्थी / पालक</h3><p>स्वतःची हजेरी, प्रगती, फी बघा; संदेश/तक्रार पाठवा.</p></div>
+    <p style="margin-top:20px;font-size:13px;color:var(--muted);">प्लॅटफॉर्म मालक? <span id="goSuper" style="color:var(--gold);text-decoration:underline;cursor:pointer;">सुपर ॲडमिन प्रवेश</span></p>
+    <p style="margin:18px 0 8px;font-size:12.5px;color:var(--muted);">किंवा वेगळा डेमो बघा:</p>
+    <div class="sheetbtns" style="margin-bottom:8px;"><button class="btn ghost small" id="demoAdminBtn2">ॲडमिन डेमो</button><button class="btn ghost small" id="demoTeacherBtn2">शिक्षक डेमो</button></div>
+    <div class="sheetbtns"><button class="btn ghost small" id="demoStudentBtn2">विद्यार्थी डेमो</button><button class="btn ghost small" id="demoSuperBtn2">सुपर ॲडमिन डेमो</button></div>
+  </div>`;
+  document.getElementById('pickAdmin').onclick = showAdminLogin;
+  document.getElementById('pickTeacher').onclick = showTeacherLogin;
+  document.getElementById('pickStudent').onclick = showStudentLogin;
+  document.getElementById('goSuper').onclick = showSuperAdminLogin;
+  document.getElementById('demoAdminBtn2').onclick = demoAsAdmin;
+  document.getElementById('demoTeacherBtn2').onclick = demoAsTeacher;
+  document.getElementById('demoStudentBtn2').onclick = demoAsStudent;
+  document.getElementById('demoSuperBtn2').onclick = demoAsSuperAdmin;
+}
+
+function showSuperAdminLogin(){
+  const root = document.getElementById('appRoot');
+  root.innerHTML = `<div style="padding:40px 24px;text-align:center;">
+    <button class="backbtn" id="backSuper">मागे जा ✕</button>
+    <h1 style="font-size:22px;">सुपर ॲडमिन प्रवेश</h1>
+    <p style="color:var(--muted);font-size:13.5px;margin:0 0 20px;">सगळ्या शाळांचं नियंत्रण — फी न भरल्यास सेवा बंद/चालू करणे.</p>
+    <div class="field" style="text-align:left;"><input type="password" id="superPassIn" placeholder="पासकोड टाका" style="text-align:center;"></div>
+    <div class="field" style="text-align:left;"><label><input type="checkbox" id="rememberSuperAdminPass" style="width:auto;margin-right:8px;">पासवर्ड या फोनवर लक्षात ठेवा</label></div>
+    <button class="btn primary wide" id="superLoginBtn">प्रवेश करा</button>
+    <p class="err" id="superErr" style="display:none;margin-top:14px;">पासकोड चुकीचा आहे.</p>
+  </div>`;
+  document.getElementById('backSuper').onclick = ()=>{ if(school) showRoleLanding(); else showFirstTimeSetup(); };
+  try{ const saved = localStorage.getItem('remembered-superadmin-pass'); if(saved){ document.getElementById('superPassIn').value = saved; document.getElementById('rememberSuperAdminPass').checked = true; } }catch(e){}
+  document.getElementById('superLoginBtn').onclick = async ()=>{
+    const correctPass = await getSuperAdminPass();
+    if(document.getElementById('superPassIn').value === correctPass){
+      if(document.getElementById('rememberSuperAdminPass').checked){ try{ localStorage.setItem('remembered-superadmin-pass', correctPass); }catch(e){} }
+      else { try{ localStorage.removeItem('remembered-superadmin-pass'); }catch(e){} }
+      demoMode = false; showSuperAdminPanel();
+    }
+    else document.getElementById('superErr').style.display='block';
+  };
+}
+
+async function showSuperAdminPanel(){
+  const dir = await loadDirectory();
+  const root = document.getElementById('appRoot');
+  root.innerHTML = `
+  <div class="topbar">
+    <span class="roletag">सुपर ॲडमिन</span>
+    <h1>प्लॅटफॉर्म नियंत्रण</h1>
+    <p>सर्व नोंदणीकृत शाळा <span class="logoutlink" id="superLogout">बाहेर पडा</span></p>
+  </div>
+  <div class="content">
+    <div class="adminpad">
+      <p class="hint" style="margin-bottom:12px;">इतर डेमो त्वरित बघा (इथूनच परत या):</p>
+      <div class="sheetbtns" style="margin-bottom:8px;"><button class="btn ghost small" id="qsAdmin">ॲडमिन डेमो</button><button class="btn ghost small" id="qsTeacher">शिक्षक डेमो</button></div>
+      <div class="sheetbtns"><button class="btn ghost small" id="qsStudent">विद्यार्थी डेमो</button></div>
+    </div>
+    <div class="adminpad"><p class="hint">फी भरली नसेल तर "सेवा" टॉगल बंद करा — त्या शाळेतील ॲडमिन/शिक्षक/विद्यार्थी कोणालाही ॲप वापरता येणार नाही, तुम्ही परत चालू करेपर्यंत.</p></div>
+    <div class="adminpad">
+      <h4>नवीन शाळा तयार करा</h4>
+      <p class="hint">शाळेचं नाव, आयडी व ॲडमिन पासकोड इथून तुम्हीच ठरवा, मग मुख्याध्यापकाला द्या.</p>
+      <div class="field"><label>शाळेचं नाव</label><input type="text" id="newSchoolName" placeholder="उदा. जिल्हा परिषद प्राथमिक शाळा"></div>
+      <div class="field"><label>शाळा आयडी</label><input type="text" id="newSchoolId" placeholder="उदा. school1"></div>
+      <div class="field"><label>ॲडमिन पासकोड</label><input type="text" id="newSchoolAdminPass" placeholder="पासकोड सेट करा"></div>
+      <div class="field"><label>पहिल्या वर्गाचं नाव</label><input type="text" id="newSchoolClass" placeholder="उदा. इयत्ता १ ली"></div>
+      <button class="btn primary wide" id="createSchoolBtn">शाळा तयार करा</button>
+    </div>
+    <div class="adminpad">
+      <h4>तुमचा (सुपर ॲडमिन) पासकोड बदला</h4>
+      <div class="field"><input type="text" id="newSuperAdminPass" placeholder="नवीन पासकोड"></div>
+      <button class="btn ghost wide" id="saveSuperAdminPassBtn">पासकोड बदला</button>
+    </div>
+    <div id="schoolDirList"></div>
+  </div>`;
+  document.getElementById('superLogout').onclick = showRoleLandingForNoSchool;
+  document.getElementById('qsAdmin').onclick = ()=> demoAsAdmin(true);
+  document.getElementById('qsTeacher').onclick = ()=> demoAsTeacher(true);
+  document.getElementById('qsStudent').onclick = ()=> demoAsStudent(true);
+  document.getElementById('createSchoolBtn').onclick = async ()=>{
+    const name = document.getElementById('newSchoolName').value.trim();
+    const id = document.getElementById('newSchoolId').value.trim();
+    const adminPass = document.getElementById('newSchoolAdminPass').value.trim();
+    const className = document.getElementById('newSchoolClass').value.trim() || 'इयत्ता १ ली';
+    if(!name || !id || !adminPass){ alert('नाव, आयडी व पासकोड टाका'); return; }
+    const existing = await loadSchool(id);
+    if(existing){ alert('हा शाळा आयडी आधीच वापरात आहे, दुसरा टाका.'); return; }
+    const newSchool = {
+      id, name, adminPass, teacherCode: genId(), active:true,
+      notice:{text:'',active:false}, holidays:[], events:[], parentMessages:[], studentMessages:[], teacherNotices:[],
+      teacherPerms:{ students:true, holidays:true, progress:true, fees:true, events:true, parentmsg:true, studentmsg:true },
+      studentPerms:{ myprogress:true, myfees:true, myevents:true, myparentmsg:true, mysend:true },
+      classes:[{id:'cl1', name:className, students:[], parentMessages:[]}]
+    };
+    await window.storage.set('school4-'+id, JSON.stringify(newSchool), true);
+    await addToDirectory(id, name);
+    document.getElementById('newSchoolName').value=''; document.getElementById('newSchoolId').value=''; document.getElementById('newSchoolAdminPass').value=''; document.getElementById('newSchoolClass').value='';
+    renderSchoolDirList(await loadDirectory());
+    alert('शाळा तयार झाली! आयडी: '+id+' , ॲडमिन पासकोड: '+adminPass+' — हे मुख्याध्यापकाला द्या.');
+  };
+  document.getElementById('saveSuperAdminPassBtn').onclick = async ()=>{
+    const np = document.getElementById('newSuperAdminPass').value.trim();
+    if(!np){ alert('नवीन पासकोड टाका'); return; }
+    await setSuperAdminPass(np);
+    document.getElementById('newSuperAdminPass').value='';
+    alert('पासकोड बदलला! पुढच्या वेळी हाच नवीन पासकोड वापरा.');
+  };
+  renderSchoolDirList(dir);
+}
+
+function renderSchoolDirList(dir){
+  const el = document.getElementById('schoolDirList');
+  if(dir.length===0){ el.innerHTML = '<p style="color:var(--muted);font-size:14px;">अजून एकही शाळा नोंदलेली नाही.</p>'; return; }
+  el.innerHTML = dir.map(d=>{
+    const overdue = isFeeOverdue(d);
+    const nd = nextDueDate(d);
+    return `
+    <div class="adminpad" style="${overdue?'border-color:var(--red);':''}">
+      ${overdue?'<div style="background:var(--red-bg);color:var(--red);font-weight:800;padding:10px 12px;border-radius:8px;margin-bottom:12px;font-size:14px;">⚠ फी थकीत आहे — भरलेली नाही</div>':''}
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div><p style="margin:0;font-weight:700;font-size:16px;">${d.name}</p><p style="margin:2px 0 0;font-size:12px;color:var(--muted);">आयडी: ${d.id}</p></div>
+        <div class="toggle ${d.active?'on':'off'}" data-id="${d.id}" data-active="${d.active}"><div class="knob"></div></div>
+      </div>
+      <div class="field" style="margin-bottom:10px;"><label>फी भरण्याचा प्रकार</label>
+        <select data-cycle="${d.id}">
+          <option value="monthly" ${d.billingCycle==='monthly'?'selected':''}>दरमहा (Monthly)</option>
+          <option value="yearly" ${d.billingCycle==='yearly'?'selected':''}>दरवर्षी (Yearly)</option>
+        </select>
+      </div>
+      <p style="font-size:13.5px;color:var(--muted);margin:0 0 4px;">शेवटची फी भरल्याची तारीख: <b style="color:var(--white);">${d.lastPaidDate?displayDate(d.lastPaidDate):'नोंद नाही'}</b></p>
+      <p style="font-size:13.5px;color:${overdue?'var(--red)':'var(--green)'};margin:0 0 14px;font-weight:700;">पुढची फी देय तारीख: ${nd?displayDate(nd):'—'}</p>
+      <div class="sheetbtns" style="margin-bottom:10px;">
+        <button class="btn primary" data-paid="${d.id}">आज फी भरली म्हणून नोंदवा</button>
+      </div>
+      <button class="btn ghost wide" data-enter="${d.id}">ॲडमिन म्हणून या शाळेत प्रवेश करा</button>
+    </div>`;
+  }).join('');
+  el.querySelectorAll('.toggle').forEach(t=>{
+    t.onclick = async ()=>{
+      const id = t.dataset.id;
+      const newActive = !(t.dataset.active === 'true');
+      await updateDirectoryEntry(id, {active:newActive});
+      const s = await loadSchool(id);
+      if(s){ s.active = newActive; await window.storage.set('school4-'+id, JSON.stringify(s), true); }
+      renderSchoolDirList(await loadDirectory());
+    };
+  });
+  el.querySelectorAll('[data-cycle]').forEach(sel=>{
+    sel.onchange = async ()=>{ await updateDirectoryEntry(sel.dataset.cycle, {billingCycle: sel.value}); renderSchoolDirList(await loadDirectory()); };
+  });
+  el.querySelectorAll('[data-paid]').forEach(btn=>{
+    btn.onclick = async ()=>{ await updateDirectoryEntry(btn.dataset.paid, {lastPaidDate: todayStr()}); renderSchoolDirList(await loadDirectory()); };
+  });
+  el.querySelectorAll('[data-enter]').forEach(btn=>{
+    btn.onclick = async ()=>{
+      const id = btn.dataset.enter;
+      const s = await loadSchool(id);
+      if(!s){ alert('शाळा सापडली नाही.'); return; }
+      school = s; ensureDefaults(); todayKey = todayStr();
+      session = {role:'admin', viaSuperAdmin:true};
+      renderRoot();
+    };
+  });
+}
+
+function showRoleLandingForNoSchool(){
+  const root = document.getElementById('appRoot');
+  root.innerHTML = `<div style="padding:50px 24px;text-align:center;">
+    <h1 style="font-size:22px;">धन्यवाद</h1>
+    <p style="color:var(--muted);font-size:14px;margin:20px 0;">पुन्हा प्रवेश करण्यासाठी पेज रिफ्रेश करा.</p>
+  </div>`;
+}
+
+function showAdminLogin(){
+  const root = document.getElementById('appRoot');
+  root.innerHTML = `<div style="padding:40px 24px;text-align:center;">
+    <button class="backbtn" id="back0">मागे जा ✕</button>
+    <h1 style="font-size:22px;">ॲडमिन प्रवेश</h1>
+    <div class="field" style="text-align:left;"><input type="password" id="adminPassIn" placeholder="पासकोड टाका" style="text-align:center;"></div>
+    <button class="btn primary wide" id="adminLoginBtn">प्रवेश करा</button>
+    <p class="err" id="adminErr" style="display:none;margin-top:14px;">पासकोड चुकीचा आहे.</p>
+  </div>`;
+  document.getElementById('back0').onclick = showRoleLanding;
+  document.getElementById('adminLoginBtn').onclick = ()=>{
+    if(document.getElementById('adminPassIn').value === school.adminPass){ session={role:'admin'}; renderRoot(); }
+    else document.getElementById('adminErr').style.display='block';
+  };
+}
+function showTeacherLogin(){
+  const root = document.getElementById('appRoot');
+  root.innerHTML = `<div style="padding:40px 24px;text-align:center;">
+    <button class="backbtn" id="back1">मागे जा ✕</button>
+    <h1 style="font-size:22px;">शिक्षक प्रवेश</h1>
+    <p style="color:var(--muted);font-size:13.5px;margin:0 0 20px;">ॲडमिनकडून मिळालेला शिक्षक कोड टाका</p>
+    <div class="field" style="text-align:left;"><input type="text" id="teacherCodeIn" placeholder="शिक्षक कोड" style="text-align:center;"></div>
+    <button class="btn primary wide" id="teacherLoginBtn">प्रवेश करा</button>
+    <p class="err" id="teacherErr" style="display:none;margin-top:14px;">कोड चुकीचा आहे.</p>
+  </div>`;
+  document.getElementById('back1').onclick = showRoleLanding;
+  document.getElementById('teacherLoginBtn').onclick = ()=>{
+    if(document.getElementById('teacherCodeIn').value.trim() === school.teacherCode){ session={role:'teacher'}; renderRoot(); }
+    else document.getElementById('teacherErr').style.display='block';
+  };
+}
+function showStudentLogin(){
+  const root = document.getElementById('appRoot');
+  root.innerHTML = `<div style="padding:40px 24px;text-align:center;">
+    <button class="backbtn" id="back2">मागे जा ✕</button>
+    <h1 style="font-size:22px;">विद्यार्थी प्रवेश</h1>
+    <div class="field" style="text-align:left;"><label style="color:var(--muted);">वर्ग निवडा</label>
+      <select id="stuClassSel" style="width:100%;padding:14px;border:2px solid var(--line);border-radius:8px;font-size:16px;background:var(--surface2);color:var(--white);">
+        ${school.classes.map((c,i)=>`<option value="${i}">${c.name}</option>`).join('')}
+      </select>
+    </div>
+    <div class="field" style="text-align:left;"><label style="color:var(--muted);">रोल नंबर</label><input type="text" id="stuRollIn" placeholder="रोल नंबर टाका"></div>
+    <button class="btn primary wide" id="stuLoginBtn">प्रवेश करा</button>
+    <p class="err" id="stuErr" style="display:none;margin-top:14px;">हा रोल नंबर सापडला नाही.</p>
+  </div>`;
+  document.getElementById('back2').onclick = showRoleLanding;
+  document.getElementById('stuLoginBtn').onclick = ()=>{
+    const clsIdx = parseInt(document.getElementById('stuClassSel').value);
+    const roll = document.getElementById('stuRollIn').value.trim();
+    const cls = school.classes[clsIdx];
+    const stud = cls.students.find(s=>s.roll===roll);
+    if(!stud){ document.getElementById('stuErr').style.display='block'; return; }
+    session = {role:'student', studentId:stud.id, classIdx:clsIdx};
+    currentClassIdx = clsIdx;
+    renderRoot();
+  };
+}
+
+function renderRoot(){
+  if(session.role!=='student') currentClassIdx = 0;
+  const root = document.getElementById('appRoot');
+  if(session.role==='student'){ currentTab='myattend'; root.innerHTML = studentMainHTML(); }
+  else { currentTab='attend'; root.innerHTML = staffMainHTML(); }
+  attach();
+  render();
+}
+
+function roleLabel(){ return session.role==='admin'?'ॲडमिन':(session.role==='teacher'?'शिक्षक':'विद्यार्थी'); }
+
+const STAFF_TABS = [
+  {key:'attend', label:'हजेरी', always:true},
+  {key:'attendHist', label:'हजेरी अहवाल', always:true},
+  {key:'holidays', label:'सुट्ट्या', permKey:'holidays'},
+  {key:'students', label:'विद्यार्थी', permKey:'students'},
+  {key:'progress', label:'प्रगती', permKey:'progress'},
+  {key:'fees', label:'फी', permKey:'fees'},
+  {key:'events', label:'उपक्रम', permKey:'events'},
+  {key:'notice', label:'सूचना', always:true},
+  {key:'parentmsg', label:'पालकांना संदेश', permKey:'parentmsg'},
+  {key:'studentmsg', label:'विद्यार्थी संदेश', permKey:'studentmsg'},
+  {key:'teachernotice', label:'ॲडमिन सूचना', always:true},
+];
+
+function visibleStaffTabs(){
+  if(session.role==='admin') return STAFF_TABS.concat([{key:'permissions',label:'परवानग्या',always:true},{key:'settings',label:'सेटिंग',always:true}]);
+  return STAFF_TABS.filter(t=> t.always || school.teacherPerms[t.permKey]);
+}
+
+function staffMainHTML(){
+  const tabs = visibleStaffTabs();
+  const menu = tabs.map((t,i)=>`<div class="mitem ${i===0?'active':''}" data-tab="${t.key}">${t.label}</div>`).join('');
+  let quickSwitchHTML = '';
+  if(demoMode && session.role==='admin'){
+    quickSwitchHTML = `<div style="background:var(--surface);padding:10px 16px;border-bottom:2px solid var(--line);">
+      <div class="sheetbtns"><button class="btn ghost small" id="qsTeacherFromAdmin">शिक्षक डेमो पहा</button><button class="btn ghost small" id="qsStudentFromAdmin">विद्यार्थी डेमो पहा</button></div>
+    </div>`;
+  } else if(demoMode && session.role==='teacher'){
+    quickSwitchHTML = `<div style="background:var(--surface);padding:10px 16px;border-bottom:2px solid var(--line);">
+      <button class="btn ghost small" id="qsStudentFromTeacher">विद्यार्थी डेमो पहा</button>
+    </div>`;
+  }
+  return `
+  <div class="topbar">
+    <span class="roletag">${roleLabel()}</span>
+    <h1>${school.name}</h1>
+    <p>शाळा व्यवस्थापन <span class="logoutlink" id="logoutBtn">बाहेर पडा</span></p>
+  </div>
+  ${quickSwitchHTML}
+  <div class="menuscroll" id="menuscroll">${menu}</div>
+  <div class="content" id="pane-attend"><div id="noticeArea"></div><div class="classrow" id="classrow"></div><div id="attendBody"></div></div>
+  <div class="content" id="pane-attendHist" style="display:none;">
+    <div class="classrow" id="classrow2"></div>
+    <div class="field"><label>महिना निवडा</label><input type="month" id="monthPicker"></div>
+    <div id="monthReport"></div>
+    <div class="adminpad"><h4>वैयक्तिक हजेरी शोधा</h4>
+      <select id="histStudSelect" style="width:100%;padding:14px;border:2px solid var(--line);border-radius:8px;font-size:16px;background:var(--surface2);color:var(--white);margin-bottom:12px;"></select>
+      <div id="studHistResult"></div>
+    </div>
+  </div>
+  <div class="content" id="pane-holidays" style="display:none;">
+    <div class="adminpad"><h4>नवीन सुट्टी जोडा</h4>
+      <div class="field"><label>तारीख</label><input type="date" id="holDate"></div>
+      <div class="field"><label>कारण</label><input type="text" id="holName" placeholder="उदा. गणेश चतुर्थी"></div>
+      <button class="btn primary wide" id="addHolBtn">सुट्टी जोडा</button>
+    </div>
+    <div id="holList"></div>
+  </div>
+  <div class="content" id="pane-students" style="display:none;">
+    <div class="classrow" id="classrow3"></div>
+    <div class="adminpad"><h4>नवीन विद्यार्थी जोडा</h4>
+      <div class="field"><label>नाव</label><input type="text" id="sName" placeholder="उदा. सचिन जाधव"></div>
+      <div class="field"><label>रोल नंबर</label><input type="text" id="sRoll" placeholder="उदा. 12"></div>
+      <div class="field"><label>पालकांचा फोन नंबर</label><input type="tel" id="sPhone" placeholder="उदा. 9876543210"></div>
+      <button class="btn primary wide" id="addStudBtn">जोडा</button>
+    </div>
+    <div id="studManageList"></div>
+  </div>
+  <div class="content" id="pane-progress" style="display:none;">
+    <div class="classrow" id="classrow4"></div>
+    <div class="field"><label>विद्यार्थी निवडा</label><select id="progStudSelect" style="width:100%;padding:14px;border:2px solid var(--line);border-radius:8px;font-size:16px;background:var(--surface2);color:var(--white);"></select></div>
+    <div id="progressBody"></div>
+  </div>
+  <div class="content" id="pane-fees" style="display:none;">
+    <div class="classrow" id="classrow5"></div>
+    <div class="field"><label>विद्यार्थी निवडा</label><select id="feeStudSelect" style="width:100%;padding:14px;border:2px solid var(--line);border-radius:8px;font-size:16px;background:var(--surface2);color:var(--white);"></select></div>
+    <div id="feeBody"></div>
+  </div>
+  <div class="content" id="pane-events" style="display:none;">
+    <div class="adminpad"><h4>नवीन उपक्रम/कार्यक्रम जोडा</h4>
+      <div class="field"><label>कार्यक्रमाचं नाव</label><input type="text" id="evName" placeholder="उदा. वार्षिक स्नेहसंमेलन"></div>
+      <div class="field"><label>तारीख</label><input type="date" id="evDate"></div>
+      <div class="field"><label>तपशील</label><textarea id="evDesc" placeholder="उदा. सकाळी १० वाजता शाळेच्या पटांगणावर"></textarea></div>
+      <button class="btn primary wide" id="addEventBtn">कार्यक्रम जोडा</button>
+    </div>
+    <div id="eventList"></div>
+  </div>
+  <div class="content" id="pane-notice" style="display:none;">
+    <div class="adminpad"><h4>शाळेची सर्वसाधारण सूचना</h4>
+      <p class="hint">उदा. सुट्टी, वेळापत्रक बदल — सगळ्यांना (शिक्षक + विद्यार्थी) हजेरी स्क्रीनवर दिसते.</p>
+      <div class="field"><label>सूचनेचा मजकूर</label><textarea id="noticeText" placeholder="उदा. उद्या पालक सभा आहे"></textarea></div>
+      <div class="field"><label><input type="checkbox" id="noticeActive" style="width:auto;margin-right:8px;">सूचना सक्रिय ठेवा</label></div>
+      <button class="btn primary wide" id="saveNoticeBtn">जतन करा</button>
+    </div>
+    <div class="adminpad"><h4>आजच्या गैरहजरांना मेसेज पाठवा</h4>
+      <div class="classrow" id="classrow6"></div>
+      <button class="btn primary wide" id="sendAbsentMsgs">गैरहजरांची यादी तयार करा</button>
+      <div id="absentMsgList" style="margin-top:14px;"></div>
+    </div>
+  </div>
+  <div class="content" id="pane-parentmsg" style="display:none;">
+    <div class="adminpad">
+      <h4>पालकांना विशेष संदेश (अभ्यासक्रम / सूचना)</h4>
+      <p class="hint">हे सर्वसाधारण सूचनेपेक्षा वेगळं आहे — इथून अभ्यासक्रम, गृहपाठ किंवा विशेष सूचना पाठवा.</p>
+      <div class="classrow" id="classrow7"></div>
+      <div class="field"><label>शीर्षक</label><input type="text" id="pmTitle" placeholder="उदा. या आठवड्याचा अभ्यासक्रम"></div>
+      <div class="field"><label>तपशीलवार मजकूर</label><textarea id="pmBody" placeholder="इथे संपूर्ण अभ्यासक्रम, सूचना किंवा गृहपाठ लिहा"></textarea></div>
+      <button class="btn primary wide" id="sendPmBtn">संदेश पाठवा</button>
+    </div>
+    <div id="pmList"></div>
+  </div>
+  <div class="content" id="pane-studentmsg" style="display:none;">
+    <div class="adminpad"><h4>विद्यार्थी/पालकांकडून आलेले संदेश</h4><p class="hint">रजा विनंती, तक्रार किंवा सूचना — इथे उत्तर देता येईल.</p></div>
+    <div id="studentMsgList"></div>
+  </div>
+  <div class="content" id="pane-teachernotice" style="display:none;">
+    ${session.role==='admin' ? `
+    <div class="adminpad">
+      <h4>शिक्षकांना खास सूचना</h4>
+      <p class="hint">ही फक्त शिक्षकांना दिसते, विद्यार्थ्यांना दिसत नाही — उदा. बैठकीची वेळ, कामाची सूचना.</p>
+      <div class="field"><label>शीर्षक</label><input type="text" id="tnTitle" placeholder="उदा. शुक्रवारी शिक्षक बैठक"></div>
+      <div class="field"><label>मजकूर</label><textarea id="tnBody" placeholder="तपशील लिहा"></textarea></div>
+      <button class="btn primary wide" id="sendTnBtn">सूचना पाठवा</button>
+    </div>` : `<div class="adminpad"><h4>ॲडमिनकडून आलेल्या सूचना</h4></div>`}
+    <div id="tnList"></div>
+  </div>
+  <div class="content" id="pane-permissions" style="display:none;">
+    <div class="permsection">शिक्षकांसाठी परवानग्या</div>
+    <div id="teacherPermList"></div>
+    <div class="permsection">विद्यार्थ्यांसाठी परवानग्या</div>
+    <div id="studentPermList"></div>
+    <p class="helpline">बंद केलेलं फीचर त्या-त्या यूजरच्या मेनूतून पूर्णपणे गायब होईल.</p>
+  </div>
+  <div class="content" id="pane-settings" style="display:none;">
+    <div class="adminpad"><h4>शाळेचं नाव</h4><div class="field"><input type="text" id="schoolNameInput"></div></div>
+    <div class="adminpad"><h4>शिक्षक प्रवेश कोड</h4><p class="hint">हा कोड शिक्षकांना द्या.</p><div class="field"><input type="text" id="teacherCodeInput"></div></div>
+    <div class="adminpad"><h4>ॲडमिन पासकोड बदला</h4><p class="hint">मुख्याध्यापक बदलल्यास नवीन पासकोड इथे सेट करा.</p><div class="field"><input type="password" id="adminPassInput" placeholder="नवीन पासकोड (रिकामं सोडल्यास बदलणार नाही)"></div></div>
+    <div class="adminpad">
+      <h4>वर्ग व्यवस्थापन</h4>
+      <p class="hint">शाळा पहिली ते सातवी, दहावी किंवा बारावीपर्यंत असेल त्यानुसार वर्ग जोडा/काढा.</p>
+      <div class="field"><input type="text" id="newClassName" placeholder="उदा. इयत्ता ६ वी ब"></div>
+      <button class="btn primary wide" id="addClassBtn" style="margin-bottom:14px;">वर्ग जोडा</button>
+      <div id="classManageList"></div>
+    </div>
+    <div class="adminpad"><h4>डेटाचा बॅकअप</h4>
+      <div class="sheetbtns"><button class="btn ghost" id="exportBtn">बॅकअप डाउनलोड</button><button class="btn ghost" id="importBtnTrigger">बॅकअप परत आणा</button></div>
+      <input type="file" id="importFile" accept=".json" style="display:none;">
+    </div>
+    <button class="btn primary wide" id="saveSettingsBtn">बदल जतन करा</button>
+  </div>`;
+}
+
+const STUDENT_TABS = [
+  {key:'myattend', label:'माझी हजेरी', always:true},
+  {key:'myprogress', label:'माझी प्रगती', permKey:'myprogress'},
+  {key:'myfees', label:'माझी फी', permKey:'myfees'},
+  {key:'mynotice', label:'सूचना', always:true},
+  {key:'myevents', label:'उपक्रम', permKey:'myevents'},
+  {key:'myparentmsg', label:'शिक्षकांचा संदेश', permKey:'myparentmsg'},
+  {key:'mysend', label:'संदेश पाठवा', permKey:'mysend'},
+];
+function visibleStudentTabs(){ return STUDENT_TABS.filter(t=> t.always || school.studentPerms[t.permKey]); }
+
+function studentMainHTML(){
+  const cls = school.classes[session.classIdx];
+  const stud = cls.students.find(s=>s.id===session.studentId);
+  const tabs = visibleStudentTabs();
+  const menu = tabs.map((t,i)=>`<div class="mitem ${i===0?'active':''}" data-tab="${t.key}">${t.label}</div>`).join('');
+  const panes = tabs.map((t,i)=>`<div class="content" id="pane-${t.key}" style="${i===0?'':'display:none;'}"></div>`).join('');
+  return `
+  <div class="topbar">
+    <span class="roletag">विद्यार्थी</span>
+    <h1>${stud.name}</h1>
+    <p>${cls.name} <span class="logoutlink" id="logoutBtn">बाहेर पडा</span></p>
+  </div>
+  <div class="menuscroll" id="menuscroll">${menu}</div>
+  ${panes.replace('id="pane-mysend"', 'id="pane-mysend-wrap"')}
+  `;
+}
+
+function classSelectorHTML(){ return school.classes.map((c,i)=>`<div class="classbtn ${i===currentClassIdx?'active':''}" data-idx="${i}">${c.name}</div>`).join(''); }
+function attachClassSelectors(){ document.querySelectorAll('.classbtn').forEach(b=>{ b.onclick = ()=>{ currentClassIdx=parseInt(b.dataset.idx); selectedStudentId=null; render(); }; }); }
+
+function attach(){
+  const lb = document.getElementById('logoutBtn');
+  if(lb) lb.onclick = ()=>{
+    if(demoReturn){ session = demoReturn; demoReturn = null; renderRoot(); return; }
+    if(session.viaSuperAdmin){ session={role:null}; showSuperAdminPanel(); }
+    else { session={role:null}; showRoleLanding(); }
+  };
+  if(document.getElementById('qsTeacherFromAdmin')){
+    document.getElementById('qsTeacherFromAdmin').onclick = ()=>{ demoReturn = {...session}; demoAsTeacher(); };
+  }
+  if(document.getElementById('qsStudentFromAdmin')){
+    document.getElementById('qsStudentFromAdmin').onclick = ()=>{ demoReturn = {...session}; demoAsStudent(); };
+  }
+  if(document.getElementById('qsStudentFromTeacher')){
+    document.getElementById('qsStudentFromTeacher').onclick = ()=>{ demoReturn = {...session}; demoAsStudent(); };
+  }
+
+  document.querySelectorAll('.mitem').forEach(t=>{
+    t.addEventListener('click', ()=>{
+      document.querySelectorAll('.mitem').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      currentTab = t.dataset.tab;
+      document.querySelectorAll('.content').forEach(c=> c.style.display='none');
+      const pane = document.getElementById('pane-'+currentTab);
+      if(pane) pane.style.display='block';
+      render();
+    });
+  });
+
+  if(session.role==='student'){ renderStudentTabContent(); return; }
+
+  if(document.getElementById('monthPicker')){
+    document.getElementById('monthPicker').value = todayStr().slice(0,7);
+    document.getElementById('monthPicker').onchange = render;
+  }
+  if(document.getElementById('addHolBtn')) document.getElementById('addHolBtn').onclick = async ()=>{
+    const date = document.getElementById('holDate').value;
+    const name = document.getElementById('holName').value.trim();
+    if(!date || !name){ alert('तारीख आणि कारण दोन्ही टाका'); return; }
+    school.holidays.push({date, name});
+    await saveSchool();
+    document.getElementById('holDate').value=''; document.getElementById('holName').value='';
+    render();
+  };
+  if(document.getElementById('addStudBtn')) document.getElementById('addStudBtn').onclick = async ()=>{
+    const name = document.getElementById('sName').value.trim();
+    const roll = document.getElementById('sRoll').value.trim();
+    if(!name || !roll){ alert('नाव आणि रोल नंबर दोन्ही टाका'); return; }
+    const cls = school.classes[currentClassIdx];
+    cls.students.push({ id:'s'+Date.now(), name, roll, phone:document.getElementById('sPhone').value.trim(), attendance:{}, exams:[], fees:[], behavior:'', sports:'' });
+    await saveSchool();
+    document.getElementById('sName').value=''; document.getElementById('sRoll').value=''; document.getElementById('sPhone').value='';
+    render();
+  };
+  if(document.getElementById('addEventBtn')) document.getElementById('addEventBtn').onclick = async ()=>{
+    const name = document.getElementById('evName').value.trim();
+    const date = document.getElementById('evDate').value;
+    if(!name || !date){ alert('नाव आणि तारीख टाका'); return; }
+    school.events.push({ id:'ev'+Date.now(), name, date, desc: document.getElementById('evDesc').value.trim() });
+    await saveSchool();
+    document.getElementById('evName').value=''; document.getElementById('evDate').value=''; document.getElementById('evDesc').value='';
+    render();
+  };
+  if(document.getElementById('saveNoticeBtn')) document.getElementById('saveNoticeBtn').onclick = async ()=>{
+    school.notice = { text: document.getElementById('noticeText').value.trim(), active: document.getElementById('noticeActive').checked };
+    await saveSchool(); render(); alert('जतन झालं!');
+  };
+  if(document.getElementById('sendAbsentMsgs')) document.getElementById('sendAbsentMsgs').onclick = ()=>{
+    const cls = school.classes[currentClassIdx];
+    const absentees = cls.students.filter(s=> s.attendance[todayKey]===false);
+    const el = document.getElementById('absentMsgList');
+    if(absentees.length===0){ el.innerHTML = '<p style="font-size:14px;color:var(--muted);">आज कोणीही गैरहजर नाही.</p>'; return; }
+    el.innerHTML = absentees.map(s=>{
+      if(!s.phone) return `<div class="lowrow"><span>${s.name}</span><span style="color:var(--muted);">फोन नंबर नाही</span></div>`;
+      const msg = encodeURIComponent(`नमस्कार, आपला पाल्य ${s.name} आज (${todayDisplay()}) शाळेत गैरहजर आहे. कृपया कारण कळवा. धन्यवाद - ${school.name}`);
+      return `<div class="lowrow"><span>${s.name}</span><a href="https://wa.me/91${s.phone.replace(/\D/g,'')}?text=${msg}" target="_blank" class="btn ghost small">WhatsApp पाठवा</a></div>`;
+    }).join('');
+  };
+  if(document.getElementById('sendPmBtn')) document.getElementById('sendPmBtn').onclick = async ()=>{
+    const title = document.getElementById('pmTitle').value.trim();
+    const body = document.getElementById('pmBody').value.trim();
+    if(!title || !body){ alert('शीर्षक आणि मजकूर दोन्ही टाका'); return; }
+    const cls = school.classes[currentClassIdx];
+    if(!cls.parentMessages) cls.parentMessages = [];
+    cls.parentMessages.push({ id:'pm'+Date.now(), title, body, date: todayStr() });
+    await saveSchool();
+    document.getElementById('pmTitle').value=''; document.getElementById('pmBody').value='';
+    render();
+    alert('संदेश पाठवला!');
+  };
+  if(document.getElementById('sendTnBtn')) document.getElementById('sendTnBtn').onclick = async ()=>{
+    const title = document.getElementById('tnTitle').value.trim();
+    const body = document.getElementById('tnBody').value.trim();
+    if(!title || !body){ alert('शीर्षक आणि मजकूर दोन्ही टाका'); return; }
+    school.teacherNotices.push({ id:'tn'+Date.now(), title, body, date: todayStr() });
+    await saveSchool();
+    document.getElementById('tnTitle').value=''; document.getElementById('tnBody').value='';
+    render();
+    alert('सूचना पाठवली!');
+  };
+
+  if(document.getElementById('addClassBtn')){
+    document.getElementById('addClassBtn').onclick = async ()=>{
+      const name = document.getElementById('newClassName').value.trim();
+      if(!name) return;
+      school.classes.push({ id:'cl'+Date.now(), name, students:[], parentMessages:[] });
+      await saveSchool();
+      document.getElementById('newClassName').value='';
+      render(); alert('वर्ग जोडला!');
+    };
+    document.getElementById('saveSettingsBtn').onclick = async ()=>{
+      school.name = document.getElementById('schoolNameInput').value.trim() || school.name;
+      school.teacherCode = document.getElementById('teacherCodeInput').value.trim() || school.teacherCode;
+      const newPass = document.getElementById('adminPassInput').value.trim();
+      if(newPass) school.adminPass = newPass;
+      await saveSchool();
+      await updateDirectoryEntry(school.id, {name: school.name});
+      document.querySelector('.topbar h1').textContent = school.name;
+      document.getElementById('adminPassInput').value = '';
+      alert('जतन झालं!');
+    };
+    document.getElementById('exportBtn').onclick = ()=>{
+      const blob = new Blob([JSON.stringify(school,null,2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download='shala-backup-'+school.id+'.json'; a.click();
+    };
+    document.getElementById('importBtnTrigger').onclick = ()=> document.getElementById('importFile').click();
+    document.getElementById('importFile').onchange = (e)=>{
+      const file = e.target.files[0]; if(!file) return;
+      const reader = new FileReader();
+      reader.onload = async function(ev){
+        try{ school = JSON.parse(ev.target.result); ensureDefaults(); await saveSchool(); render(); alert('बॅकअप परत आणला!'); }
+        catch(err){ alert('फाईल चुकीची आहे.'); }
+      };
+      reader.readAsText(file);
+    };
+  }
+}
+
+function render(){
+  if(session.role==='student'){ renderStudentTabContent(); return; }
+
+  if(document.getElementById('schoolNameInput')) document.getElementById('schoolNameInput').value = school.name;
+  if(document.getElementById('teacherCodeInput')) document.getElementById('teacherCodeInput').value = school.teacherCode;
+  ['classrow','classrow2','classrow3','classrow4','classrow5','classrow6','classrow7'].forEach(id=>{
+    const el = document.getElementById(id); if(el) el.innerHTML = classSelectorHTML();
+  });
+  attachClassSelectors();
+
+  const noticeEl = document.getElementById('noticeArea');
+  if(school.notice && school.notice.active && school.notice.text){ noticeEl.innerHTML = `<div class="notice"><p>📢 ${school.notice.text}</p></div>`; }
+  else noticeEl.innerHTML = '';
+  if(document.getElementById('noticeText')) document.getElementById('noticeText').value = school.notice ? school.notice.text : '';
+  if(document.getElementById('noticeActive')) document.getElementById('noticeActive').checked = school.notice ? !!school.notice.active : false;
+
+  renderAttendTab();
+  if(currentTab==='attendHist') renderAttendHist();
+  if(currentTab==='holidays') renderHolidays();
+  if(currentTab==='students') renderStudentsTab();
+  if(currentTab==='progress') renderProgressTab();
+  if(currentTab==='fees') renderFeesTab();
+  if(currentTab==='events') renderEvents();
+  if(currentTab==='parentmsg') renderParentMsgList();
+  if(currentTab==='studentmsg') renderStudentMsgList();
+  if(currentTab==='teachernotice') renderTeacherNoticeList();
+  if(currentTab==='permissions') renderPermissions();
+  if(currentTab==='settings') renderClassManageList();
+}
+
+function isHoliday(dateStr){ return school.holidays.some(h=>h.date===dateStr); }
+function holidayName(dateStr){ const h = school.holidays.find(h=>h.date===dateStr); return h?h.name:''; }
+
+function renderAttendTab(){
+  const cls = school.classes[currentClassIdx];
+  const body = document.getElementById('attendBody');
+  if(isHoliday(todayKey)){
+    body.innerHTML = `<div class="notice" style="background:var(--gold-bg);border-color:var(--gold);"><p>🎉 आज सुट्टी आहे — ${holidayName(todayKey)}. हजेरी घेण्याची गरज नाही.</p></div>`;
+    return;
+  }
+  let present=0, absent=0;
+  const rows = cls.students.map(s=>{
+    const isAbsent = s.attendance[todayKey]===false;
+    if(isAbsent) absent++; else present++;
+    const initials = s.name.trim().split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    return `<div class="stud ${isAbsent?'absent':'present'}" data-sid="${s.id}"><div class="avatar">${initials}</div><div class="stud-info"><p class="stud-name">${s.name}</p><p class="stud-roll">रोल नं. ${s.roll}</p></div><div class="statuslbl ${isAbsent?'absent':'present'}">${isAbsent?'गैरहजर':'हजर'}</div></div>`;
+  }).join('');
+  body.innerHTML = `
+    <div class="dateline"><span class="dt">📅 ${todayDisplay()}</span></div>
+    <div class="summary"><div class="card"><p class="lbl">हजर</p><p class="val get">${present}</p></div><div class="card"><p class="lbl">गैरहजर</p><p class="val give">${absent}</p></div></div>
+    <p style="font-size:13.5px;color:var(--muted);margin:0 0 14px;">फक्त गैरहजर विद्यार्थ्यावर टॅप करा — बाकी सगळे आपोआप हजर धरले जातील.</p>
+    ${cls.students.length===0 ? '<div class="empty">या वर्गात अजून विद्यार्थी नाहीत.</div>' : `<div>${rows}</div>`}
+  `;
+  body.querySelectorAll('.stud').forEach(el=>{
+    el.onclick = async ()=>{
+      const s = cls.students.find(x=>x.id===el.dataset.sid);
+      s.attendance[todayKey] = s.attendance[todayKey]===false ? true : false;
+      await saveSchool();
+      renderAttendTab();
+    };
+  });
+}
+
+function renderAttendHist(){
+  const cls = school.classes[currentClassIdx];
+  const month = document.getElementById('monthPicker').value || todayStr().slice(0,7);
+  const monthReport = document.getElementById('monthReport');
+  const rows = cls.students.map(s=>{
+    const days = Object.keys(s.attendance).filter(d=>d.startsWith(month));
+    const presentDays = days.filter(d=>s.attendance[d]===true).length;
+    const pct = days.length>0 ? Math.round((presentDays/days.length)*100) : 0;
+    return `<div class="lowrow ${pct<75 && days.length>0 ?'danger':''}"><span>${s.name}</span><span style="font-weight:800;">${days.length>0?pct+'%':'नोंद नाही'}</span></div>`;
+  }).join('');
+  monthReport.innerHTML = `<div class="adminpad"><h4>${month} — वर्गाचा हजेरी अहवाल</h4>${rows||'<p style="color:var(--muted);font-size:14px;">डेटा नाही.</p>'}</div>`;
+  const sel = document.getElementById('histStudSelect');
+  sel.innerHTML = cls.students.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  sel.onchange = renderStudHist;
+  renderStudHist();
+}
+function renderStudHist(){
+  const cls = school.classes[currentClassIdx];
+  const sel = document.getElementById('histStudSelect');
+  const s = cls.students.find(x=>x.id===sel.value) || cls.students[0];
+  const el = document.getElementById('studHistResult');
+  if(!s){ el.innerHTML=''; return; }
+  const days = Object.keys(s.attendance).sort();
+  if(days.length===0){ el.innerHTML = '<p style="color:var(--muted);font-size:14px;">या विद्यार्थ्याची अजून हजेरी नोंदलेली नाही.</p>'; return; }
+  const totalPresent = days.filter(d=>s.attendance[d]===true).length;
+  const overallPct = Math.round((totalPresent/days.length)*100);
+  const recent = days.slice(-10).reverse();
+  el.innerHTML = `
+    <div class="repcard"><p class="rtitle">एकूण नोंदवलेले दिवस (सर्व काळाचे)</p><p class="rval">${days.length} दिवस, हजेरी ${overallPct}%</p></div>
+    <p style="font-size:13.5px;color:var(--muted);margin:10px 0 8px;">अलीकडचे १० दिवस:</p>
+    ${recent.map(d=>`<div class="lowrow"><span>${displayDate(d)}</span><span class="${s.attendance[d]?'val get':'val give'}" style="font-size:14px;">${s.attendance[d]?'हजर':'गैरहजर'}</span></div>`).join('')}
+  `;
+}
+
+function renderHolidays(){
+  const el = document.getElementById('holList');
+  const sorted = [...school.holidays].sort((a,b)=>a.date.localeCompare(b.date));
+  el.innerHTML = sorted.length===0 ? '<p style="color:var(--muted);font-size:14px;">अजून एकही सुट्टी नोंदवलेली नाही.</p>' :
+    sorted.map(h=>`<div class="lowrow"><span>${displayDate(h.date)} — ${h.name}</span><button class="btn danger small" onclick="removeHoliday('${h.date}','${h.name.replace(/'/g,"\\'")}')">काढा</button></div>`).join('');
+}
+function removeHoliday(date,name){ school.holidays = school.holidays.filter(h=>!(h.date===date && h.name===name)); saveSchool(); render(); }
+
+function renderStudentsTab(){
+  const cls = school.classes[currentClassIdx];
+  const el = document.getElementById('studManageList');
+  el.innerHTML = cls.students.map(s=>`
+    <div class="stud present" style="cursor:default;">
+      <div class="avatar">${s.name.trim().split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase()}</div>
+      <div class="stud-info"><p class="stud-name">${s.name}</p><p class="stud-roll">रोल ${s.roll} · ${s.phone||'फोन नाही'}</p></div>
+      <button class="btn danger small" onclick="removeStudent('${s.id}')">काढा</button>
+    </div>`).join('');
+}
+function removeStudent(id){
+  if(!confirm('या विद्यार्थ्याला यादीतून काढायचं आहे का?')) return;
+  const cls = school.classes[currentClassIdx];
+  cls.students = cls.students.filter(s=>s.id!==id);
+  saveSchool(); render();
+}
+
+function renderProgressTab(){
+  const cls = school.classes[currentClassIdx];
+  const sel = document.getElementById('progStudSelect');
+  sel.innerHTML = cls.students.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  if(!selectedStudentId || !cls.students.find(s=>s.id===selectedStudentId)) selectedStudentId = cls.students[0]?.id;
+  sel.value = selectedStudentId;
+  sel.onchange = ()=>{ selectedStudentId = sel.value; renderProgressBody(); };
+  renderProgressBody();
+}
+function computeAvg(s){
+  const avgs = s.exams.map(ex=>{
+    const total = ex.subjects.reduce((a,b)=>a+Number(b.marks),0);
+    const max = ex.subjects.reduce((a,b)=>a+Number(b.max),0);
+    return max>0 ? (total/max)*100 : 0;
+  });
+  return avgs.length>0 ? Math.round(avgs.reduce((a,b)=>a+b,0)/avgs.length) : 0;
+}
+function renderProgressBody(){
+  const cls = school.classes[currentClassIdx];
+  const s = cls.students.find(x=>x.id===selectedStudentId);
+  const el = document.getElementById('progressBody');
+  if(!s){ el.innerHTML = '<div class="empty">आधी विद्यार्थी जोडा.</div>'; return; }
+  const overallAvg = computeAvg(s);
+  el.innerHTML = `
+    <div class="repcard"><p class="rtitle">एकूण सरासरी टक्केवारी</p><p class="rval ${s.exams.length>0 && overallAvg<40?'give':'get'}">${s.exams.length>0?overallAvg+'%':'परीक्षा नोंद नाही'}</p></div>
+    <div class="adminpad">
+      <h4>वर्तणूक व खेळातील सहभाग</h4>
+      <div class="field"><label>वर्तणूक नोंद</label><textarea id="behaviorNote" placeholder="उदा. वर्गात लक्षपूर्वक ऐकतो">${s.behavior||''}</textarea></div>
+      <div class="field"><label>खेळ/इतर उपक्रम नोंद</label><textarea id="sportsNote" placeholder="उदा. खो-खो स्पर्धेत सहभाग">${s.sports||''}</textarea></div>
+      <button class="btn primary wide" id="saveNotesBtn">नोंद जतन करा</button>
+    </div>
+    <div class="adminpad">
+      <h4>परीक्षा निकाल</h4>
+      <button class="btn ghost wide" id="addExamBtn" style="margin-bottom:14px;">नवीन परीक्षा जोडा</button>
+      ${s.exams.length===0?'<p style="color:var(--muted);font-size:14px;">अजून परीक्षा नोंदलेली नाही.</p>':''}
+      ${[...s.exams].reverse().map(ex=>{
+        const total = ex.subjects.reduce((a,b)=>a+Number(b.marks),0);
+        const max = ex.subjects.reduce((a,b)=>a+Number(b.max),0);
+        const pct = max>0?Math.round((total/max)*100):0;
+        return `<div class="lowrow" style="flex-direction:column;align-items:stretch;">
+          <div style="display:flex;justify-content:space-between;font-weight:700;margin-bottom:6px;"><span>${ex.name}</span><span class="${pct<40?'val give':'val get'}" style="font-size:15px;">${pct}%</span></div>
+          <div style="font-size:12.5px;color:var(--muted);">${ex.subjects.map(sub=>sub.name+': '+sub.marks+'/'+sub.max).join(', ')}</div>
+        </div>`;
+      }).join('')}
+    </div>
+    <button class="btn primary wide" id="sendProgressBtn">पालकांना प्रगती अहवाल पाठवा</button>
+  `;
+  document.getElementById('saveNotesBtn').onclick = async ()=>{
+    s.behavior = document.getElementById('behaviorNote').value.trim();
+    s.sports = document.getElementById('sportsNote').value.trim();
+    await saveSchool();
+    alert('नोंद जतन झाली!');
+  };
+  document.getElementById('addExamBtn').onclick = ()=> openExamSheet(s);
+  document.getElementById('sendProgressBtn').onclick = ()=>{
+    if(!s.phone){ alert('या विद्यार्थ्याचा पालकांचा फोन नंबर नोंदवलेला नाही.'); return; }
+    const lastExam = s.exams[s.exams.length-1];
+    let examLine = 'अजून कोणतीही परीक्षा नोंदलेली नाही.';
+    if(lastExam){
+      const total = lastExam.subjects.reduce((a,b)=>a+Number(b.marks),0);
+      const max = lastExam.subjects.reduce((a,b)=>a+Number(b.max),0);
+      const pct = max>0?Math.round((total/max)*100):0;
+      examLine = lastExam.name+' मध्ये '+pct+'% गुण मिळाले.';
+    }
+    const msg = encodeURIComponent(`नमस्कार, ${s.name} याचा प्रगती अहवाल:\n${examLine}\nएकूण सरासरी: ${overallAvg}%\nवर्तणूक: ${s.behavior||'नोंद नाही'}\nखेळ/उपक्रम: ${s.sports||'नोंद नाही'}\n- ${school.name}`);
+    window.open('https://wa.me/91'+s.phone.replace(/\D/g,'')+'?text='+msg, '_blank');
+  };
+}
+function openExamSheet(s){
+  examSubjectRows = [{name:'',marks:'',max:''}];
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay';
+  overlay.innerHTML = `<div class="sheet">
+    <h3>नवीन परीक्षा जोडा — ${s.name}</h3>
+    <div class="field"><label>परीक्षेचं नाव</label><input type="text" id="examName" placeholder="उदा. सहामाही परीक्षा"></div>
+    <div id="subjRows"></div>
+    <button class="btn ghost wide" id="addSubjRow" style="margin-bottom:14px;">आणखी विषय जोडा</button>
+    <div class="sheetbtns"><button class="btn ghost" id="cancelExam">रद्द करा</button><button class="btn primary" id="saveExam">जतन करा</button></div>
+  </div>`;
+  document.body.appendChild(overlay);
+  function renderSubjRows(){
+    document.getElementById('subjRows').innerHTML = examSubjectRows.map((r,i)=>`
+      <div class="subjrow">
+        <input type="text" placeholder="विषय" value="${r.name}" data-i="${i}" data-f="name">
+        <input type="number" placeholder="मिळालेले गुण" value="${r.marks}" data-i="${i}" data-f="marks" style="max-width:100px;">
+        <input type="number" placeholder="एकूण गुण" value="${r.max}" data-i="${i}" data-f="max" style="max-width:100px;">
+      </div>`).join('');
+    document.querySelectorAll('#subjRows input').forEach(inp=>{ inp.oninput = ()=>{ examSubjectRows[inp.dataset.i][inp.dataset.f] = inp.value; }; });
+  }
+  renderSubjRows();
+  document.getElementById('addSubjRow').onclick = ()=>{ examSubjectRows.push({name:'',marks:'',max:''}); renderSubjRows(); };
+  document.getElementById('cancelExam').onclick = ()=> overlay.remove();
+  document.getElementById('saveExam').onclick = async ()=>{
+    const name = document.getElementById('examName').value.trim();
+    const valid = examSubjectRows.filter(r=>r.name && r.marks!=='' && r.max!=='');
+    if(!name || valid.length===0){ alert('परीक्षेचं नाव आणि किमान एक विषय भरा.'); return; }
+    s.exams.push({ id:'ex'+Date.now(), name, subjects: valid });
+    await saveSchool();
+    overlay.remove();
+    renderProgressBody();
+  };
+}
+
+function renderFeesTab(){
+  const cls = school.classes[currentClassIdx];
+  const sel = document.getElementById('feeStudSelect');
+  sel.innerHTML = cls.students.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  if(!selectedStudentId || !cls.students.find(s=>s.id===selectedStudentId)) selectedStudentId = cls.students[0]?.id;
+  sel.value = selectedStudentId;
+  sel.onchange = ()=>{ selectedStudentId = sel.value; renderFeeBody(); };
+  renderFeeBody();
+}
+function renderFeeBody(){
+  const cls = school.classes[currentClassIdx];
+  const s = cls.students.find(x=>x.id===selectedStudentId);
+  const el = document.getElementById('feeBody');
+  if(!s){ el.innerHTML = '<div class="empty">आधी विद्यार्थी जोडा.</div>'; return; }
+  const totalDue = s.fees.filter(f=>!f.paid).reduce((a,b)=>a+Number(b.amount),0);
+  el.innerHTML = `
+    <div class="repcard"><p class="rtitle">एकूण बाकी फी</p><p class="rval ${totalDue>0?'give':'get'}">${fmt(totalDue)}</p></div>
+    <div class="adminpad"><h4>नवीन फी नोंद जोडा</h4>
+      <div class="field"><label>प्रकार</label><select id="feeType"><option>परीक्षा फी</option><option>शालेय फी</option><option>देणगी</option><option>इतर</option></select></div>
+      <div class="field"><label>रक्कम (₹)</label><input type="number" id="feeAmt" placeholder="0"></div>
+      <div class="field"><label><input type="checkbox" id="feePaid" style="width:auto;margin-right:8px;">भरलेली आहे</label></div>
+      <button class="btn primary wide" id="addFeeBtn">नोंद करा</button>
+    </div>
+    <div class="adminpad"><h4>फी इतिहास</h4>
+      ${s.fees.length===0?'<p style="color:var(--muted);font-size:14px;">अजून नोंद नाही.</p>':
+        [...s.fees].reverse().map(f=>`<div class="lowrow"><span>${f.type}</span><span class="tag ${f.paid?'fee-paid':'fee-due'}">${f.paid?'भरली':'बाकी'} ${fmt(f.amount)}</span></div>`).join('')}
+    </div>
+    ${totalDue>0?'<button class="btn primary wide" id="feeReminderBtn">फी रिमाइंडर पाठवा</button>':''}
+  `;
+  document.getElementById('addFeeBtn').onclick = async ()=>{
+    const amt = parseFloat(document.getElementById('feeAmt').value);
+    if(!amt || amt<=0){ alert('योग्य रक्कम टाका'); return; }
+    s.fees.push({ id:'f'+Date.now(), type: document.getElementById('feeType').value, amount: amt, paid: document.getElementById('feePaid').checked });
+    await saveSchool();
+    renderFeeBody();
+  };
+  const remBtn = document.getElementById('feeReminderBtn');
+  if(remBtn) remBtn.onclick = ()=>{
+    if(!s.phone){ alert('फोन नंबर नोंदवलेला नाही.'); return; }
+    const msg = encodeURIComponent(`नमस्कार, ${s.name} यांची ${fmt(totalDue)} फी बाकी आहे. कृपया लवकरात लवकर भरणा करा. - ${school.name}`);
+    window.open('https://wa.me/91'+s.phone.replace(/\D/g,'')+'?text='+msg, '_blank');
+  };
+}
+
+function renderEvents(){
+  const el = document.getElementById('eventList');
+  const sorted = [...school.events].sort((a,b)=>a.date.localeCompare(b.date));
+  el.innerHTML = sorted.length===0 ? '<p style="color:var(--muted);font-size:14px;">अजून कार्यक्रम नोंदलेला नाही.</p>' :
+    sorted.map(ev=>`<div class="adminpad">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span class="tag event">${displayDate(ev.date)}</span><button class="btn danger small" onclick="removeEvent('${ev.id}')">काढा</button></div>
+      <h4 style="margin:0 0 4px;">${ev.name}</h4>
+      <p style="font-size:13.5px;color:var(--muted);margin:0 0 12px;">${ev.desc||''}</p>
+      <button class="btn ghost wide" onclick="copyEventMsg('${ev.id}')">मजकूर कॉपी करा</button>
+    </div>`).join('');
+}
+function removeEvent(id){ school.events = school.events.filter(e=>e.id!==id); saveSchool(); render(); }
+function copyEventMsg(id){
+  const ev = school.events.find(e=>e.id===id);
+  const msg = `नमस्कार, ${school.name} तर्फे "${ev.name}" हा कार्यक्रम ${displayDate(ev.date)} रोजी आयोजित केला आहे. ${ev.desc||''}`;
+  navigator.clipboard.writeText(msg).then(()=> alert('मजकूर कॉपी झाला!'));
+}
+
+function renderParentMsgList(){
+  const cls = school.classes[currentClassIdx];
+  const el = document.getElementById('pmList');
+  const msgs = cls.parentMessages || [];
+  el.innerHTML = msgs.length===0 ? '<p style="color:var(--muted);font-size:14px;">अजून संदेश पाठवलेला नाही.</p>' :
+    [...msgs].reverse().map(m=>`<div class="msgbox"><p class="mtitle">${m.title}</p><p class="mmeta">${displayDate(m.date)}</p><p class="mbody">${m.body}</p></div>`).join('');
+}
+
+function renderStudentMsgList(){
+  const el = document.getElementById('studentMsgList');
+  const msgs = school.studentMessages || [];
+  el.innerHTML = msgs.length===0 ? '<p style="color:var(--muted);font-size:14px;">अजून कोणताही संदेश आलेला नाही.</p>' :
+    [...msgs].reverse().map(m=>`
+    <div class="msgbox">
+      <p class="mtitle">${m.studentName} <span class="tag msg">${m.className}</span> <span class="tag msg">${m.type}</span></p>
+      <p class="mmeta">${displayDate(m.date)}</p>
+      <p class="mbody">${m.text}</p>
+      ${m.reply ? `<p style="margin-top:8px;padding-top:8px;border-top:1px solid var(--line);font-size:14px;"><b>तुमचं उत्तर:</b> ${m.reply}</p>` :
+      `<div class="field" style="margin-top:10px;"><textarea id="reply-${m.id}" placeholder="उत्तर लिहा"></textarea></div>
+      <button class="btn primary small" onclick="sendReply('${m.id}')">उत्तर पाठवा</button>`}
+    </div>`).join('');
+}
+async function sendReply(id){
+  const m = school.studentMessages.find(x=>x.id===id);
+  const text = document.getElementById('reply-'+id).value.trim();
+  if(!text){ alert('उत्तर लिहा'); return; }
+  m.reply = text;
+  await saveSchool();
+  renderStudentMsgList();
+}
+
+function renderTeacherNoticeList(){
+  const el = document.getElementById('tnList');
+  const msgs = school.teacherNotices || [];
+  el.innerHTML = msgs.length===0 ? '<p style="color:var(--muted);font-size:14px;">अजून कोणतीही सूचना नाही.</p>' :
+    [...msgs].reverse().map(m=>`<div class="msgbox"><p class="mtitle">${m.title}</p><p class="mmeta">${displayDate(m.date)}</p><p class="mbody">${m.body}</p></div>`).join('');
+}
+
+function renderPermissions(){
+  const tp = school.teacherPerms, sp = school.studentPerms;
+  const teacherLabels = {students:'विद्यार्थी व्यवस्थापन', holidays:'सुट्ट्या व्यवस्थापन', progress:'प्रगती नोंदवणे', fees:'फी व्यवस्थापन', events:'उपक्रम जोडणे', parentmsg:'पालकांना संदेश पाठवणे', studentmsg:'विद्यार्थी संदेशांना उत्तर देणे'};
+  const studentLabels = {myprogress:'माझी प्रगती बघणे', myfees:'माझी फी बघणे', myevents:'उपक्रम बघणे', myparentmsg:'शिक्षकांचा संदेश बघणे', mysend:'संदेश पाठवणे'};
+  document.getElementById('teacherPermList').innerHTML = Object.keys(teacherLabels).map(k=>`
+    <div class="permrow"><span>${teacherLabels[k]}</span><div class="toggle ${tp[k]?'on':'off'}" data-scope="teacher" data-key="${k}"><div class="knob"></div></div></div>`).join('');
+  document.getElementById('studentPermList').innerHTML = Object.keys(studentLabels).map(k=>`
+    <div class="permrow"><span>${studentLabels[k]}</span><div class="toggle ${sp[k]?'on':'off'}" data-scope="student" data-key="${k}"><div class="knob"></div></div></div>`).join('');
+  document.querySelectorAll('.toggle').forEach(t=>{
+    t.onclick = async ()=>{
+      const scope = t.dataset.scope, key = t.dataset.key;
+      if(scope==='teacher') school.teacherPerms[key] = !school.teacherPerms[key];
+      else school.studentPerms[key] = !school.studentPerms[key];
+      await saveSchool();
+      renderPermissions();
+    };
+  });
+}
+
+function renderClassManageList(){
+  const el = document.getElementById('classManageList');
+  el.innerHTML = school.classes.map((c,i)=>`<div class="lowrow"><span>${c.name} (${c.students.length} विद्यार्थी)</span><button class="btn danger small" onclick="removeClass(${i})">वर्ग काढा</button></div>`).join('');
+}
+function removeClass(idx){
+  if(!confirm('हा संपूर्ण वर्ग व त्यातले सगळे विद्यार्थी कायमचे काढायचे आहेत का?')) return;
+  school.classes.splice(idx,1);
+  if(school.classes.length===0) school.classes.push({id:'cl'+Date.now(), name:'इयत्ता १ ली', students:[], parentMessages:[]});
+  saveSchool();
+  currentClassIdx = 0;
+  render();
+}
+
+function renderStudentTabContent(){
+  const cls = school.classes[session.classIdx];
+  const s = cls.students.find(x=>x.id===session.studentId);
+
+  const attendPane = document.getElementById('pane-myattend');
+  if(attendPane){
+    const days = Object.keys(s.attendance).sort();
+    const totalPresent = days.filter(d=>s.attendance[d]===true).length;
+    const overallPct = days.length>0 ? Math.round((totalPresent/days.length)*100) : 0;
+    const recent = days.slice(-10).reverse();
+    attendPane.innerHTML = `
+      <div class="repcard"><p class="rtitle">एकूण हजेरी टक्केवारी</p><p class="rval ${overallPct<75 && days.length>0?'give':'get'}">${days.length>0?overallPct+'%':'नोंद नाही'}</p></div>
+      <p style="font-size:13.5px;color:var(--muted);margin:14px 0 8px;">अलीकडचे १० दिवस:</p>
+      ${recent.length===0?'<p style="color:var(--muted);font-size:14px;">नोंद नाही.</p>':recent.map(d=>`<div class="lowrow"><span>${displayDate(d)}</span><span class="${s.attendance[d]?'val get':'val give'}" style="font-size:14px;">${s.attendance[d]?'हजर':'गैरहजर'}</span></div>`).join('')}
+    `;
+  }
+
+  const progPane = document.getElementById('pane-myprogress');
+  if(progPane){
+    const overallAvg = computeAvg(s);
+    progPane.innerHTML = `
+      <div class="repcard"><p class="rtitle">एकूण सरासरी टक्केवारी</p><p class="rval ${s.exams.length>0 && overallAvg<40?'give':'get'}">${s.exams.length>0?overallAvg+'%':'परीक्षा नोंद नाही'}</p></div>
+      <div class="adminpad"><h4>परीक्षा निकाल</h4>
+        ${s.exams.length===0?'<p style="color:var(--muted);font-size:14px;">अजून परीक्षा नोंदलेली नाही.</p>':
+          [...s.exams].reverse().map(ex=>{
+            const total = ex.subjects.reduce((a,b)=>a+Number(b.marks),0);
+            const max = ex.subjects.reduce((a,b)=>a+Number(b.max),0);
+            const pct = max>0?Math.round((total/max)*100):0;
+            return `<div class="lowrow" style="flex-direction:column;align-items:stretch;"><div style="display:flex;justify-content:space-between;font-weight:700;margin-bottom:6px;"><span>${ex.name}</span><span class="${pct<40?'val give':'val get'}" style="font-size:15px;">${pct}%</span></div><div style="font-size:12.5px;color:var(--muted);">${ex.subjects.map(sub=>sub.name+': '+sub.marks+'/'+sub.max).join(', ')}</div></div>`;
+          }).join('')}
+      </div>
+      <div class="adminpad"><h4>वर्तणूक व खेळ नोंद</h4><p style="font-size:14.5px;">${s.behavior||'नोंद नाही'}</p><p style="font-size:14.5px;">${s.sports||'नोंद नाही'}</p></div>
+    `;
+  }
+
+  const feePane = document.getElementById('pane-myfees');
+  if(feePane){
+    const totalDue = s.fees.filter(f=>!f.paid).reduce((a,b)=>a+Number(b.amount),0);
+    feePane.innerHTML = `
+      <div class="repcard"><p class="rtitle">एकूण बाकी फी</p><p class="rval ${totalDue>0?'give':'get'}">${fmt(totalDue)}</p></div>
+      <div class="adminpad"><h4>फी इतिहास</h4>
+        ${s.fees.length===0?'<p style="color:var(--muted);font-size:14px;">अजून नोंद नाही.</p>':
+          [...s.fees].reverse().map(f=>`<div class="lowrow"><span>${f.type}</span><span class="tag ${f.paid?'fee-paid':'fee-due'}">${f.paid?'भरली':'बाकी'} ${fmt(f.amount)}</span></div>`).join('')}
+      </div>`;
+  }
+
+  const noticePane = document.getElementById('pane-mynotice');
+  if(noticePane) noticePane.innerHTML = (school.notice && school.notice.active && school.notice.text) ? `<div class="notice"><p>📢 ${school.notice.text}</p></div>` : '<p style="color:var(--muted);font-size:14px;">सध्या कोणतीही सूचना नाही.</p>';
+
+  const evPane = document.getElementById('pane-myevents');
+  if(evPane){
+    const sortedEv = [...school.events].sort((a,b)=>a.date.localeCompare(b.date));
+    evPane.innerHTML = sortedEv.length===0 ? '<p style="color:var(--muted);font-size:14px;">सध्या कोणताही कार्यक्रम नाही.</p>' :
+      sortedEv.map(ev=>`<div class="adminpad"><span class="tag event">${displayDate(ev.date)}</span><h4 style="margin:8px 0 4px;">${ev.name}</h4><p style="font-size:13.5px;color:var(--muted);">${ev.desc||''}</p></div>`).join('');
+  }
+
+  const pmPane = document.getElementById('pane-myparentmsg');
+  if(pmPane){
+    const pmMsgs = cls.parentMessages || [];
+    pmPane.innerHTML = pmMsgs.length===0 ? '<p style="color:var(--muted);font-size:14px;">अजून कोणताही संदेश आलेला नाही.</p>' :
+      [...pmMsgs].reverse().map(m=>`<div class="msgbox"><p class="mtitle">${m.title}</p><p class="mmeta">${displayDate(m.date)}</p><p class="mbody">${m.body}</p></div>`).join('');
+  }
+
+  const sendPane = document.getElementById('pane-mysend');
+  if(sendPane){
+    const mine = school.studentMessages.filter(m=>m.studentId===s.id);
+    sendPane.innerHTML = `
+      <div class="adminpad">
+        <h4>शिक्षकांना संदेश पाठवा</h4>
+        <div class="field"><label>प्रकार</label><select id="msgType"><option>रजेची विनंती</option><option>तक्रार</option><option>सूचना</option></select></div>
+        <div class="field"><label>तपशील</label><textarea id="msgText" placeholder="इथे तुमचा मजकूर लिहा"></textarea></div>
+        <button class="btn primary wide" id="sendMsgBtn">पाठवा</button>
+      </div>
+      <div class="adminpad"><h4>तुम्ही पाठवलेले आधीचे संदेश</h4>
+        ${mine.length===0?'<p style="color:var(--muted);font-size:14px;">अजून काही पाठवलेलं नाही.</p>':
+          [...mine].reverse().map(m=>`<div class="msgbox"><p class="mtitle">${m.type}</p><p class="mmeta">${displayDate(m.date)}</p><p class="mbody">${m.text}</p>${m.reply?`<p style="margin-top:8px;padding-top:8px;border-top:1px solid var(--line);"><b>शिक्षकांचं उत्तर:</b> ${m.reply}</p>`:'<p style="color:var(--muted);font-size:13px;margin-top:8px;">अजून उत्तर आलेलं नाही.</p>'}</div>`).join('')}
+      </div>`;
+    document.getElementById('sendMsgBtn').onclick = async ()=>{
+      const text = document.getElementById('msgText').value.trim();
+      if(!text){ alert('मजकूर टाका'); return; }
+      school.studentMessages.push({ id:'sm'+Date.now(), studentId:s.id, studentName:s.name, className: cls.name, type: document.getElementById('msgType').value, text, date: todayStr(), reply:'' });
+      await saveSchool();
+      renderStudentTabContent();
+      alert('संदेश पाठवला!');
+    };
+  }
+}
+
+initApp();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>बही खाता</title>
+<link rel="manifest" href="manifest-khata.json">
+<meta name="theme-color" content="#0d1b2a">
+<style>
+  :root{
+    --bg:#121212; --surface:#1e1e1e; --surface2:#262626; --line:#3a3a3a;
+    --white:#ffffff; --muted:#c9c9c9;
+    --red:#ff5252; --red-bg:#3a1414;
+    --green:#4caf50; --green-bg:#123a16;
+    --gold:#ffca28; --gold-bg:#3a2f0a;
+    --blue:#4fa8ff; --blue-bg:#0f2740;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Noto Sans','Segoe UI',sans-serif;background:var(--bg);color:var(--white);}
+  .app{max-width:460px;margin:0 auto;min-height:100vh;background:var(--bg);}
+  .topbar{background:var(--surface2);padding:18px 20px 20px;border-bottom:2px solid var(--line);position:relative;}
+  .topbar h1{font-size:22px;margin:0;font-weight:700;}
+  .topbar p{margin:5px 0 0;font-size:13.5px;color:var(--muted);}
+  .shopname{position:absolute;top:18px;right:20px;font-size:12.5px;background:var(--surface);border:1px solid var(--line);padding:6px 12px;border-radius:20px;}
+  .menuscroll{display:flex;overflow-x:auto;background:var(--surface);border-bottom:2px solid var(--line);white-space:nowrap;-webkit-overflow-scrolling:touch;}
+  .menuscroll::-webkit-scrollbar{display:none;}
+  .mitem{flex-shrink:0;padding:14px 18px;color:var(--muted);font-size:15px;font-weight:700;cursor:pointer;border-bottom:4px solid transparent;}
+  .mitem.active{color:var(--gold);border-bottom:4px solid var(--gold);}
+  .content{padding:16px;padding-bottom:100px;}
+  .promo{border-radius:10px;padding:14px;margin-bottom:14px;display:flex;gap:12px;align-items:center;}
+  .promo.shop{background:var(--gold-bg);border:2px solid var(--gold);}
+  .promo.platform{background:var(--blue-bg);border:2px solid var(--blue);}
+  .promo img{width:52px;height:52px;border-radius:8px;object-fit:cover;flex-shrink:0;background:#fff;}
+  .promo-tag{font-size:11px;font-weight:700;margin:0 0 3px;}
+  .promo.shop .promo-tag{color:var(--gold);}
+  .promo.platform .promo-tag{color:var(--blue);}
+  .promo-title{font-weight:700;font-size:15px;margin:0 0 3px;}
+  .promo-sub{font-size:13.5px;margin:0;font-weight:600;}
+  .promo.shop .promo-sub{color:var(--gold);}
+  .promo.platform .promo-sub{color:var(--blue);}
+  .summary{display:flex;gap:10px;margin-bottom:16px;}
+  .card{background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:14px;flex:1;}
+  .card .lbl{font-size:13px;color:var(--muted);margin:0 0 6px;font-weight:600;}
+  .card .val{font-size:21px;font-weight:800;margin:0;}
+  .val.give{color:var(--red);} .val.get{color:var(--green);}
+  .searchrow{display:flex;gap:8px;margin-bottom:16px;}
+  .searchrow input{flex:1;padding:14px;border:2px solid var(--line);border-radius:8px;font-size:16px;background:var(--surface);color:var(--white);}
+  .sortrow{display:flex;gap:8px;margin-bottom:14px;}
+  .sortbtn{flex:1;padding:10px;border:2px solid var(--line);border-radius:8px;background:var(--surface);color:var(--muted);font-size:13px;font-weight:600;text-align:center;}
+  .sortbtn.active{border-color:var(--gold);color:var(--gold);}
+  .cust{display:flex;align-items:center;gap:14px;padding:14px 10px;border:2px solid var(--line);border-radius:10px;margin-bottom:10px;background:var(--surface);cursor:pointer;}
+  .avatar{width:48px;height:48px;border-radius:50%;background:var(--surface2);border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;flex-shrink:0;}
+  .cust-info{flex:1;min-width:0;}
+  .cust-name{font-size:17px;font-weight:700;margin:0;}
+  .cust-phone{font-size:13px;color:var(--muted);margin:3px 0 0;}
+  .cust-bal{font-size:17px;font-weight:800;padding:6px 12px;border-radius:8px;}
+  .cust-bal.give{color:var(--red);background:var(--red-bg);}
+  .cust-bal.get{color:var(--green);background:var(--green-bg);}
+  .cust-bal.zero{color:var(--muted);background:var(--surface2);}
+  .empty{text-align:center;padding:60px 20px;color:var(--muted);font-size:16px;line-height:1.6;}
+  .fab{position:fixed;bottom:24px;right:calc(50% - 230px + 20px);background:var(--gold);color:#121212;width:60px;height:60px;border-radius:50%;border:none;font-size:30px;font-weight:800;box-shadow:0 4px 16px rgba(0,0,0,.5);}
+  @media(max-width:460px){.fab{right:20px;}}
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:flex-end;justify-content:center;z-index:50;}
+  .sheet{background:var(--surface);width:100%;max-width:460px;border-radius:18px 18px 0 0;padding:22px;max-height:85vh;overflow-y:auto;border-top:3px solid var(--gold);}
+  .sheet h3{margin:0 0 16px;font-size:20px;font-weight:700;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:14px;color:var(--muted);margin-bottom:6px;font-weight:600;}
+  .field input,.field textarea{width:100%;padding:14px;border:2px solid var(--line);border-radius:8px;font-size:16px;background:var(--surface2);color:var(--white);}
+  .field textarea{resize:vertical;min-height:70px;}
+  .togglerow{display:flex;gap:10px;margin-bottom:16px;}
+  .togglebtn{flex:1;padding:14px;border-radius:8px;border:2px solid var(--line);text-align:center;font-size:16px;font-weight:700;background:var(--surface2);color:var(--muted);}
+  .togglebtn.sel-give{background:var(--red-bg);border-color:var(--red);color:var(--red);}
+  .togglebtn.sel-get{background:var(--green-bg);border-color:var(--green);color:var(--green);}
+  .err{color:var(--red);font-size:13.5px;margin-top:-8px;margin-bottom:12px;display:none;font-weight:600;}
+  .sheetbtns{display:flex;gap:10px;margin-top:8px;}
+  .btn{flex:1;padding:15px;border-radius:8px;border:none;font-size:16px;font-weight:700;cursor:pointer;}
+  .btn.primary{background:var(--gold);color:#121212;}
+  .btn.ghost{background:var(--surface2);color:var(--white);border:2px solid var(--line);}
+  .btn.danger{background:var(--red-bg);color:var(--red);border:2px solid var(--red);}
+  .btn.wide{width:100%;}
+  .hist{margin-top:18px;}
+  .hist h4{font-size:15px;color:var(--muted);margin:0 0 10px;font-weight:700;}
+  .histrow{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);font-size:14.5px;}
+  .histrow .h-amt.give{color:var(--red);font-weight:700;}
+  .histrow .h-amt.get{color:var(--green);font-weight:700;}
+  .histrow .h-date{color:var(--muted);font-size:12.5px;}
+  .adminpad{background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px;}
+  .adminpad h4{margin:0 0 12px;font-size:16px;font-weight:700;}
+  .adminpad p.hint{font-size:13.5px;color:var(--muted);margin:0 0 12px;line-height:1.5;}
+  .helpline{font-size:13px;color:var(--muted);text-align:center;margin-top:10px;line-height:1.6;}
+  input[type="checkbox"]{width:20px;height:20px;vertical-align:middle;margin-right:8px;}
+  .lockmsg{background:var(--red-bg);border:2px solid var(--red);border-radius:10px;padding:16px;text-align:center;}
+  .lockmsg p{margin:0 0 10px;font-size:14.5px;color:var(--white);line-height:1.6;}
+  .repcard{background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:16px;margin-bottom:12px;}
+  .repcard .rtitle{font-size:14px;color:var(--muted);margin:0 0 6px;font-weight:600;}
+  .repcard .rval{font-size:24px;font-weight:800;margin:0;}
+  .directory-row{display:flex;justify-content:space-between;align-items:center;padding:12px;border:1px solid var(--line);border-radius:8px;margin-bottom:8px;font-size:14px;}
+  .miniToggle{font-size:12px;padding:6px 10px;border-radius:6px;border:2px solid var(--line);background:var(--surface2);color:var(--muted);font-weight:700;cursor:pointer;}
+  .miniToggle.on{border-color:var(--green);color:var(--green);background:var(--green-bg);}
+  .roleCard{background:var(--surface);border:2px solid var(--line);border-radius:12px;padding:20px;margin-bottom:16px;text-align:left;cursor:pointer;}
+  .roleCard h3{margin:0 0 6px;font-size:17px;color:var(--white);}
+  .roleCard p{margin:0;font-size:13.5px;color:var(--muted);}
+  .backbtn{background:var(--red-bg);border:2px solid var(--red);color:var(--red);font-size:15px;font-weight:800;margin-bottom:18px;cursor:pointer;padding:10px 18px;border-radius:8px;display:inline-flex;align-items:center;gap:8px;}
+</style>
+</head>
+<body>
+<div class="app" id="appRoot"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBHv84rGeY9xJAQXJpRUNHzlSyjfRBLGF4",
+  authDomain: "myapp-f8caa.firebaseapp.com",
+  projectId: "myapp-f8caa",
+  storageBucket: "myapp-f8caa.firebasestorage.app",
+  messagingSenderId: "437363677556",
+  appId: "1:437363677556:web:ec0d13aa4f418e95e8b421",
+  measurementId: "G-Q89N506MT0"
+};
+firebase.initializeApp(firebaseConfig);
+const fbDb = firebase.firestore();
+
+window.storage = {
+  async get(key, shared){
+    if(!shared){
+      const v = localStorage.getItem(key);
+      if(v===null) throw new Error('not found: '+key);
+      return {key, value:v, shared:false};
+    } else {
+      const doc = await fbDb.collection('app_data').doc(key).get();
+      if(!doc.exists) throw new Error('not found: '+key);
+      return {key, value:doc.data().value, shared:true};
+    }
+  },
+  async set(key, value, shared){
+    if(!shared){
+      localStorage.setItem(key, value);
+      return {key, value, shared:false};
+    } else {
+      await fbDb.collection('app_data').doc(key).set({value:value});
+      return {key, value, shared:true};
+    }
+  },
+  async delete(key, shared){
+    if(!shared){
+      localStorage.removeItem(key);
+    } else {
+      await fbDb.collection('app_data').doc(key).delete();
+    }
+    return {key, deleted:true, shared:!!shared};
+  },
+  async list(prefix, shared){
+    if(!shared){
+      const keys = [];
+      for(let i=0;i<localStorage.length;i++){ const k = localStorage.key(i); if(!prefix || k.startsWith(prefix)) keys.push(k); }
+      return {keys, prefix, shared:false};
+    } else {
+      let q = fbDb.collection('app_data');
+      const snap = await q.get();
+      const keys = [];
+      snap.forEach(d=>{ if(!prefix || d.id.startsWith(prefix)) keys.push(d.id); });
+      return {keys, prefix, shared:true};
+    }
+  }
+};
+
+const DEFAULT_SUPER_PASS = 'admin123';
+async function getSuperPass(){
+  try{ const r = await window.storage.get('super-pass', true); if(r&&r.value) return r.value; }catch(e){}
+  return DEFAULT_SUPER_PASS;
+}
+async function setSuperPass(newPass){ try{ await window.storage.set('super-pass', newPass, true); }catch(e){} }
+let session = { role:null, shopId:null };
+let currentTxnType = 'give';
+let currentCustId = null;
+let currentSort = 'name';
+let shopData = null;
+let platformPromo = {title:'',sub:'',img:'',active:false};
+let currentTab = 'list';
+
+function fmt(n){ return '₹' + Math.round(n).toLocaleString('en-IN'); }
+function balanceOf(c){ return c.txns.reduce((s,t)=> s + (t.type==='give'? t.amount : -t.amount), 0); }
+function genShopId(){ return String(Math.floor(1000+Math.random()*9000)); }
+
+let demoMode = false;
+let demoReturn = null;
+let demoShops = {};
+let demoDirectory = [];
+let demoPlatformPromo = null;
+
+async function loadPlatformPromo(){
+  if(demoMode){ if(demoPlatformPromo) platformPromo = demoPlatformPromo; return; }
+  try{ const r = await window.storage.get('platform-promo', true); if(r&&r.value) platformPromo = JSON.parse(r.value); }catch(e){}
+}
+async function savePlatformPromo(){ if(demoMode){ demoPlatformPromo = platformPromo; return; } try{ await window.storage.set('platform-promo', JSON.stringify(platformPromo), true); }catch(e){} }
+async function loadDirectory(){
+  if(demoMode) return demoDirectory;
+  try{ const r = await window.storage.get('shop-directory', true); if(r&&r.value) return JSON.parse(r.value); }catch(e){}
+  return [];
+}
+async function saveDirectory(list){ if(demoMode){ demoDirectory = list; return; } try{ await window.storage.set('shop-directory', JSON.stringify(list), true); }catch(e){} }
+async function loadShop(id){
+  if(demoMode) return demoShops[id] || null;
+  try{ const r = await window.storage.get('shop-'+id, true); if(r&&r.value) return JSON.parse(r.value); }catch(e){}
+  return null;
+}
+async function saveShop(){ if(demoMode){ demoShops[shopData.id] = shopData; return; } try{ await window.storage.set('shop-'+shopData.id, JSON.stringify(shopData), true); }catch(e){} }
+async function getMyShopId(){
+  try{ const r = await window.storage.get('my-shop-id', false); if(r&&r.value) return r.value; }catch(e){}
+  return null;
+}
+async function setMyShopId(id){ try{ await window.storage.set('my-shop-id', id, false); }catch(e){} }
+
+async function initApp(){
+  demoMode = false;
+  const existingId = await getMyShopId();
+  if(existingId){
+    const s = await loadShop(existingId);
+    if(s){
+      shopData = s; session = {role:'shop', shopId:existingId};
+      await loadPlatformPromo();
+      renderRoot();
+      return;
+    }
+  }
+  const custLink = await getMyCustomerLink();
+  if(custLink){
+    const s = await loadShop(custLink.shopId);
+    if(s && s.customers.find(c=>c.id===custLink.custId)){
+      shopData = s; session = {role:'customer', shopId:custLink.shopId, custId:custLink.custId};
+      await loadPlatformPromo();
+      renderRoot();
+      return;
+    }
+  }
+  showFirstTimeSetup();
+}
+
+function buildDemoShopObject(id, name){
+  return {
+    id, shopName:name,
+    promo:{title:'नवीन तांदूळ आवक झाली!', sub:'आजपासून ₹40/किलो, स्टॉक मर्यादित', img:'', active:true},
+    adPermission:true,
+    reminder:'नमस्कार, आपली उधारी बाकी आहे, कृपया लवकरात लवकर भरणा करा. धन्यवाद.',
+    customers:[
+      { id:'c1', name:'रामराव पाटील', phone:'9876543210', txns:[
+        {type:'give', amount:500, note:'तांदूळ, तेल', date:'5/9/2026'},
+        {type:'give', amount:200, note:'साखर', date:'8/9/2026'},
+        {type:'get', amount:300, note:'', date:'10/9/2026'}
+      ]},
+      { id:'c2', name:'सुनीता जाधव', phone:'9876543211', txns:[
+        {type:'give', amount:1200, note:'महिन्याचा किराणा', date:'2/9/2026'}
+      ]},
+      { id:'c3', name:'विजय शिंदे', phone:'', txns:[
+        {type:'give', amount:150, note:'चहा पावडर', date:'11/9/2026'},
+        {type:'get', amount:150, note:'', date:'12/9/2026'}
+      ]}
+    ]
+  };
+}
+async function ensureDemoShop(id, name){
+  let s = await loadShop(id);
+  if(!s){
+    s = buildDemoShopObject(id, name);
+    if(demoMode){ demoShops[id] = s; } else { await window.storage.set('shop-'+id, JSON.stringify(s), true); }
+    const dir = await loadDirectory();
+    if(!dir.find(x=>x.id===id)){ dir.push({id, name, adPermission:true}); await saveDirectory(dir); }
+  }
+  return s;
+}
+async function demoAsShop(viaSuper){
+  demoMode = true;
+  shopData = await ensureDemoShop('demoshop1','श्री गणेश जनरल स्टोअर (डेमो)');
+  session = {role:'shop', shopId:'demoshop1', viaSuperAdmin:!!viaSuper};
+  platformPromo = {title:'मोठी सेल! सगळीकडे सूट', sub:'फक्त या आठवड्यापुरती ऑफर', img:'', active:true};
+  demoPlatformPromo = platformPromo;
+  renderRoot();
+}
+async function demoAsSuperAdmin(){
+  demoMode = true;
+  await ensureDemoShop('demoshop1','श्री गणेश जनरल स्टोअर (डेमो)');
+  await ensureDemoShop('demoshop2','लक्ष्मी किराणा (डेमो)');
+  platformPromo = {title:'मोठी सेल! सगळीकडे सूट', sub:'फक्त या आठवड्यापुरती ऑफर', img:'', active:true};
+  demoPlatformPromo = platformPromo;
+  session = {role:'super'};
+  renderRoot();
+}
+
+async function getMyCustomerLink(){ try{ const r = await window.storage.get('my-customer-link', false); if(r&&r.value) return JSON.parse(r.value); }catch(e){} return null; }
+async function setMyCustomerLink(shopId,custId){ try{ await window.storage.set('my-customer-link', JSON.stringify({shopId,custId}), false); }catch(e){} }
+async function clearMyCustomerLink(){ try{ await window.storage.delete('my-customer-link', false); }catch(e){} }
+
+async function demoAsCustomer(viaSuper){
+  demoMode = true;
+  shopData = await ensureDemoShop('demoshop1','श्री गणेश जनरल स्टोअर (डेमो)');
+  platformPromo = {title:'मोठी सेल! सगळीकडे सूट', sub:'फक्त या आठवड्यापुरती ऑफर', img:'', active:true};
+  demoPlatformPromo = platformPromo;
+  session = {role:'customer', shopId:'demoshop1', custId:'c1', viaSuperAdmin:!!viaSuper};
+  renderRoot();
+}
+
+function showFirstTimeSetup(){
+  const root = document.getElementById('appRoot');
+  root.innerHTML = `
+  <div style="padding:40px 24px;text-align:center;">
+    <h1 style="font-size:24px;margin:0 0 6px;">बही खाता</h1>
+    <p style="color:var(--muted);font-size:14px;margin:0 0 28px;">तुम्ही कोण आहात ते निवडा</p>
+    <div class="roleCard" id="pickShop"><h3>दुकानदार</h3><p>ग्राहकांची उधारी सांभाळा, जाहिरात करा.</p></div>
+    <div class="roleCard" id="pickCustomer"><h3>ग्राहक</h3><p>तुमची स्वतःची उधारी व दुकानाच्या ऑफर्स बघा.</p></div>
+    <div class="roleCard" id="pickSuper"><h3>सुपर ॲडमिन</h3><p>सर्व दुकानं व प्लॅटफॉर्म-जाहिरात नियंत्रित करा.</p></div>
+    <p style="margin:22px 0 10px;font-size:13px;color:var(--muted);">किंवा आधी डेमो बघा (काहीही टाइप न करता):</p>
+    <div class="sheetbtns" style="margin-bottom:8px;"><button class="btn ghost small" id="demoShopBtn">दुकानदार डेमो</button><button class="btn ghost small" id="demoCustBtn">ग्राहक डेमो</button></div>
+    <button class="btn ghost wide" id="demoSuperBtn">सुपर ॲडमिन डेमो बघा</button>
+  </div>`;
+  document.getElementById('pickShop').onclick = showShopEntry;
+  document.getElementById('pickCustomer').onclick = showCustomerLogin;
+  document.getElementById('pickSuper').onclick = showSuperLogin;
+  document.getElementById('demoShopBtn').onclick = demoAsShop;
+  document.getElementById('demoCustBtn').onclick = demoAsCustomer;
+  document.getElementById('demoSuperBtn').onclick = demoAsSuperAdmin;
+}
+
+function showShopEntry(){
+  const root = document.getElementById('appRoot');
+  root.innerHTML = `
+  <div style="padding:50px 24px;text-align:center;">
+    <button class="backbtn" id="backShop">मागे जा ✕</button>
+    <h1 style="font-size:24px;margin:0 0 8px;">दुकानदार प्रवेश</h1>
+    <p style="color:var(--muted);font-size:15px;margin:0 0 24px;">प्लॅटफॉर्म मालकाने (सुपर ॲडमिनने) दिलेला दुकान आयडी व पासवर्ड टाका.</p>
+    <div class="field" style="text-align:left;"><input type="text" id="existingShopId" placeholder="दुकान आयडी" style="text-align:center;font-size:16px;"></div>
+    <div class="field" style="text-align:left;"><input type="password" id="existingShopPass" placeholder="पासवर्ड" style="text-align:center;font-size:16px;"></div>
+    <button class="btn primary wide" id="loginExistingBtn">प्रवेश करा</button>
+    <p class="err" id="shopLoginErr" style="display:none;margin-top:14px;">आयडी किंवा पासवर्ड चुकीचा आहे.</p>
+  </div>`;
+  document.getElementById('backShop').onclick = showFirstTimeSetup;
+  document.getElementById('loginExistingBtn').onclick = async ()=>{
+    demoMode = false;
+    const id = document.getElementById('existingShopId').value.trim();
+    const pass = document.getElementById('existingShopPass').value.trim();
+    const s = await loadShop(id);
+    if(!s || s.password !== pass){ document.getElementById('shopLoginErr').style.display='block'; return; }
+    shopData = s; await setMyShopId(id); session = {role:'shop', shopId:id};
+    await loadPlatformPromo(); renderRoot();
+  };
+}
+
+function showCustomerLogin(){
+  const root = document.getElementById('appRoot');
+  root.innerHTML = `
+  <div style="padding:50px 24px;text-align:center;">
+    <button class="backbtn" id="backCust">मागे जा ✕</button>
+    <h1 style="font-size:24px;margin:0 0 8px;">ग्राहक प्रवेश</h1>
+    <p style="color:var(--muted);font-size:15px;margin:0 0 24px;">दुकानदाराने दिलेला दुकान आयडी व तुमचा नोंदणीकृत फोन नंबर टाका.</p>
+    <div class="field" style="text-align:left;"><input type="text" id="custShopId" placeholder="दुकान आयडी" style="text-align:center;font-size:16px;"></div>
+    <div class="field" style="text-align:left;"><input type="tel" id="custPhone" placeholder="तुमचा फोन नंबर" style="text-align:center;font-size:16px;"></div>
+    <button class="btn primary wide" id="custLoginBtn">प्रवेश करा</button>
+    <p class="err" id="custErr" style="display:none;margin-top:14px;">हा नंबर या दुकानात सापडला नाही. दुकानदाराला विचारा.</p>
+  </div>`;
+  document.getElementById('backCust').onclick = showFirstTimeSetup;
+  document.getElementById('custLoginBtn').onclick = async ()=>{
+    demoMode = false;
+    const sid = document.getElementById('custShopId').value.trim();
+    const phone = document.getElementById('custPhone').value.trim().replace(/\D/g,'');
+    const s = await loadShop(sid);
+    if(!s){ document.getElementById('custErr').style.display='block'; return; }
+    const cust = s.customers.find(c=> c.phone && c.phone.replace(/\D/g,'')===phone);
+    if(!cust){ document.getElementById('custErr').style.display='block'; return; }
+    shopData = s;
+    await setMyCustomerLink(sid, cust.id);
+    session = {role:'customer', shopId:sid, custId:cust.id};
+    await loadPlatformPromo();
+    renderRoot();
+  };
+}
+
+function showSuperLogin(){
+  const root = document.getElementById('appRoot');
+  root.innerHTML = `
+  <div style="padding:50px 24px;text-align:center;">
+    <button class="backbtn" id="backSuperReal">मागे जा ✕</button>
+    <h1 style="font-size:24px;margin:0 0 20px;">सुपर ॲडमिन प्रवेश</h1>
+    <div class="field" style="text-align:left;"><input type="password" id="superPass" placeholder="पासकोड टाका" style="text-align:center;"></div>
+    <div class="field" style="text-align:left;"><label><input type="checkbox" id="rememberSuperPass" style="width:auto;margin-right:8px;">पासवर्ड या फोनवर लक्षात ठेवा</label></div>
+    <button class="btn primary wide" id="superLoginBtn">प्रवेश करा</button>
+    <p class="err" id="superErr" style="display:none;margin-top:14px;">पासकोड चुकीचा आहे.</p>
+  </div>`;
+  document.getElementById('backSuperReal').onclick = showFirstTimeSetup;
+  try{ const saved = localStorage.getItem('remembered-super-pass'); if(saved){ document.getElementById('superPass').value = saved; document.getElementById('rememberSuperPass').checked = true; } }catch(e){}
+  document.getElementById('superLoginBtn').onclick = async ()=>{
+    const sp = await getSuperPass();
+    if(document.getElementById('superPass').value === sp){
+      if(document.getElementById('rememberSuperPass').checked){ try{ localStorage.setItem('remembered-super-pass', sp); }catch(e){} }
+      else { try{ localStorage.removeItem('remembered-super-pass'); }catch(e){} }
+      demoMode = false; session = {role:'super'}; await loadPlatformPromo(); renderRoot();
+    } else { document.getElementById('superErr').style.display='block'; }
+  };
+}
+
+function renderRoot(){
+  const root = document.getElementById('appRoot');
+  if(session.role==='super'){ root.innerHTML = superHTML(); attachSuper(); return; }
+  if(session.role==='shop'){ currentTab='list'; root.innerHTML = shopHTML(); attachShop(); renderShop(); return; }
+  if(session.role==='customer'){ root.innerHTML = customerHTML(); attachCustomer(); renderCustomer(); return; }
+}
+
+function customerHTML(){
+  const cust = shopData.customers.find(c=>c.id===session.custId);
+  return `
+  <div class="topbar">
+    <span class="shopname" id="logoutCust" style="cursor:pointer;">बाहेर पडा</span>
+    <h1>${cust.name}</h1>
+    <p>${shopData.shopName}</p>
+  </div>
+  <div class="content">
+    <div id="custPromoArea"></div>
+    <div class="card" style="margin-bottom:16px;">
+      <p class="lbl">तुमची सध्याची बाकी</p>
+      <p class="val" id="custBal"></p>
+    </div>
+    <div class="hist">
+      <h4>व्यवहार इतिहास</h4>
+      <div id="custHistList"></div>
+    </div>
+  </div>`;
+}
+function attachCustomer(){
+  document.getElementById('logoutCust').onclick = async ()=>{
+    if(demoReturn){ session = demoReturn; demoReturn = null; renderRoot(); return; }
+    if(session.viaSuperAdmin){ session={role:'super'}; renderRoot(); return; }
+    if(!demoMode) await clearMyCustomerLink();
+    session={role:null}; shopData=null; showFirstTimeSetup();
+  };
+}
+function renderCustomer(){
+  const cust = shopData.customers.find(c=>c.id===session.custId);
+  const b = balanceOf(cust);
+  const balEl = document.getElementById('custBal');
+  balEl.textContent = b===0 ? '₹0 (हिशोब बरोबर)' : fmt(Math.abs(b)) + (b>0?' (तुम्ही द्यायचे आहेत)':' (दुकानदार तुम्हाला देणे)');
+  balEl.className = 'val ' + (b>0?'give':(b<0?'get':''));
+
+  let promoHTML = '';
+  if(platformPromo.active && platformPromo.title){
+    promoHTML += `<div class="promo platform">${platformPromo.img?`<img src="${platformPromo.img}">`:''}<div><p class="promo-tag">प्लॅटफॉर्म ऑफर</p><p class="promo-title">${platformPromo.title}</p><p class="promo-sub">${platformPromo.sub||''}</p></div></div>`;
+  }
+  if(shopData.adPermission && shopData.promo.active && shopData.promo.title){
+    promoHTML += `<div class="promo shop">${shopData.promo.img?`<img src="${shopData.promo.img}">`:''}<div><p class="promo-tag">दुकानाची जाहिरात</p><p class="promo-title">${shopData.promo.title}</p><p class="promo-sub">${shopData.promo.sub||''}</p></div></div>`;
+  }
+  document.getElementById('custPromoArea').innerHTML = promoHTML;
+
+  const hl = document.getElementById('custHistList');
+  hl.innerHTML = cust.txns.length===0 ? '<p style="font-size:14px;color:var(--muted);">अजून व्यवहार नाही.</p>' :
+    [...cust.txns].reverse().map(t=>
+      `<div class="histrow"><div><div>${t.note||(t.type==='give'?'उधार':'भरणा')}</div><div class="h-date">${t.date}</div></div><div class="h-amt ${t.type}">${t.type==='give'?'+':'-'}${fmt(t.amount)}</div></div>`
+    ).join('');
+}
+
+function superHTML(){
+  return `
+  <div class="topbar">
+    <span class="shopname" id="logoutSuper" style="cursor:pointer;">बाहेर पडा</span>
+    <h1>सुपर ॲडमिन</h1>
+    <p>सर्व दुकानदार व ग्राहकांना दिसणारी मुख्य जाहिरात</p>
+  </div>
+  <div class="content">
+    <div class="adminpad">
+      <p class="hint" style="margin-bottom:12px;">इतर डेमो त्वरित बघा (इथूनच परत या):</p>
+      <div class="sheetbtns"><button class="btn ghost small" id="qsShop">दुकानदार डेमो</button><button class="btn ghost small" id="qsCust">ग्राहक डेमो</button></div>
+    </div>
+    <div class="adminpad">
+      <h4>प्लॅटफॉर्म-व्यापी जाहिरात</h4>
+      <p class="hint">ही जाहिरात सगळ्या दुकानदारांच्या ग्राहक यादीत, त्यांच्या स्वतःच्या जाहिरातीसोबत दिसेल.</p>
+      <div class="field"><label>शीर्षक</label><input type="text" id="pTitle" placeholder="उदा. मोठी सेल! सगळीकडे सूट"></div>
+      <div class="field"><label>उप-मजकूर</label><input type="text" id="pSub" placeholder="उदा. फक्त या आठवड्यापुरती ऑफर"></div>
+      <div class="field"><label>इमेज लिंक (ऐच्छिक)</label><input type="text" id="pImg" placeholder="https://..."></div>
+      <div class="field"><label><input type="checkbox" id="pActive">जाहिरात सक्रिय ठेवा</label></div>
+      <button class="btn primary wide" id="savePlatform">जतन करा</button>
+    </div>
+    <div class="adminpad">
+      <h4>तुमचा (सुपर ॲडमिन) पासवर्ड बदला</h4>
+      <div class="field"><input type="text" id="newSuperPass" placeholder="नवीन पासवर्ड"></div>
+      <button class="btn ghost wide" id="saveSuperPassBtn">पासवर्ड बदला</button>
+    </div>
+    <div class="adminpad">
+      <h4>नवीन दुकान तयार करा</h4>
+      <p class="hint">दुकानदाराला द्यायचा आयडी व पासवर्ड इथून तुम्हीच ठरवा.</p>
+      <div class="field"><label>दुकानाचं नाव</label><input type="text" id="newShopName" placeholder="उदा. श्री गणेश जनरल स्टोअर"></div>
+      <div class="field"><label>दुकान आयडी</label><input type="text" id="newShopId" placeholder="उदा. ganesh1"></div>
+      <div class="field"><label>पासवर्ड</label><input type="text" id="newShopPass" placeholder="पासवर्ड सेट करा"></div>
+      <button class="btn primary wide" id="createShopBtn">दुकान तयार करा</button>
+    </div>
+    <div class="adminpad">
+      <h4>नोंदणीकृत दुकानं</h4>
+      <p class="hint">प्रत्येक दुकानदाराला स्वतःची जाहिरात करण्याची परवानगी इथून द्या/काढा.</p>
+      <div id="dirList"></div>
+    </div>
+  </div>`;
+}
+function attachSuper(){
+  document.getElementById('qsShop').onclick = ()=> demoAsShop(true);
+  document.getElementById('qsCust').onclick = ()=> demoAsCustomer(true);
+  document.getElementById('logoutSuper').onclick = ()=>{ session={role:null}; renderRoot(); showFirstTimeSetup(); };
+  document.getElementById('pTitle').value = platformPromo.title||'';
+  document.getElementById('pSub').value = platformPromo.sub||'';
+  document.getElementById('pImg').value = platformPromo.img||'';
+  document.getElementById('pActive').checked = !!platformPromo.active;
+  document.getElementById('savePlatform').onclick = async ()=>{
+    platformPromo = {
+      title: document.getElementById('pTitle').value.trim(),
+      sub: document.getElementById('pSub').value.trim(),
+      img: document.getElementById('pImg').value.trim(),
+      active: document.getElementById('pActive').checked
+    };
+    await savePlatformPromo();
+    alert('जतन झालं! सर्व दुकानदारांना ही जाहिरात दिसू लागेल.');
+  };
+  document.getElementById('saveSuperPassBtn').onclick = async ()=>{
+    const np = document.getElementById('newSuperPass').value.trim();
+    if(!np){ alert('नवीन पासवर्ड टाका'); return; }
+    await setSuperPass(np);
+    document.getElementById('newSuperPass').value='';
+    alert('पासवर्ड बदलला! पुढच्या वेळी हाच नवीन पासवर्ड वापरा.');
+  };
+  document.getElementById('createShopBtn').onclick = async ()=>{
+    const name = document.getElementById('newShopName').value.trim();
+    const id = document.getElementById('newShopId').value.trim();
+    const pass = document.getElementById('newShopPass').value.trim();
+    if(!name || !id || !pass){ alert('नाव, आयडी व पासवर्ड टाका'); return; }
+    const existing = await loadShop(id);
+    if(existing){ alert('हा दुकान आयडी आधीच वापरात आहे, दुसरा टाका.'); return; }
+    const newShop = { id, password:pass, shopName:name, promo:{title:'',sub:'',img:'',active:false}, adPermission:true, reminder:'', customers:[] };
+    await window.storage.set('shop-'+id, JSON.stringify(newShop), true);
+    const dir = await loadDirectory();
+    dir.push({id, name, adPermission:true});
+    await saveDirectory(dir);
+    document.getElementById('newShopName').value=''; document.getElementById('newShopId').value=''; document.getElementById('newShopPass').value='';
+    refreshDirectory();
+    alert('दुकान तयार झालं! आयडी: '+id+' , पासवर्ड: '+pass+' — हे दुकानदाराला द्या.');
+  };
+  refreshDirectory();
+}
+async function refreshDirectory(){
+  const dir = await loadDirectory();
+  const el = document.getElementById('dirList');
+  if(dir.length===0){ el.innerHTML = '<p style="color:var(--muted);font-size:14px;">अजून एकही दुकान नोंदलेलं नाही.</p>'; return; }
+  el.innerHTML = dir.map(d=>`
+    <div class="directory-row" style="flex-direction:column;align-items:stretch;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span>${d.name} <span style="color:var(--muted);">(आयडी ${d.id})</span></span>
+        <span class="miniToggle ${d.adPermission?'on':''}" data-id="${d.id}">${d.adPermission?'जाहिरात परवानगी: चालू':'जाहिरात परवानगी: बंद'}</span>
+      </div>
+      <button class="btn danger small" data-resetpass="${d.id}">पासवर्ड रीसेट करा</button>
+    </div>`).join('');
+  el.querySelectorAll('.miniToggle').forEach(btn=>{
+    btn.onclick = async ()=>{
+      const id = btn.dataset.id;
+      const dir2 = await loadDirectory();
+      const item = dir2.find(x=>x.id===id);
+      item.adPermission = !item.adPermission;
+      await saveDirectory(dir2);
+      const s = await loadShop(id);
+      if(s){ s.adPermission = item.adPermission; await window.storage.set('shop-'+id, JSON.stringify(s), true); }
+      refreshDirectory();
+    };
+  });
+  el.querySelectorAll('[data-resetpass]').forEach(btn=>{
+    btn.onclick = async ()=>{
+      const id = btn.dataset.resetpass;
+      const newPass = prompt('या दुकानासाठी नवीन पासवर्ड टाका:');
+      if(!newPass) return;
+      const s = await loadShop(id);
+      if(s){ s.password = newPass; await window.storage.set('shop-'+id, JSON.stringify(s), true); alert('पासवर्ड रीसेट झाला: '+newPass); }
+    };
+  });
+}
+
+function shopHTML(){
+  return `
+  <div class="topbar">
+    <span class="shopname" id="logoutShop" style="cursor:pointer;">बाहेर पडा</span>
+    <h1>${shopData.shopName}</h1>
+    <p>दुकान आयडी: ${shopData.id}</p>
+  </div>
+  ${demoMode ? `<div style="background:var(--surface);padding:10px 16px;border-bottom:2px solid var(--line);">
+    <button class="btn ghost small" id="qsCustFromShop">ग्राहक डेमो पहा (माझा ग्राहक कसं बघतो)</button>
+  </div>` : ''}
+  <div class="menuscroll" id="menuscroll">
+    <div class="mitem active" data-tab="list">ग्राहक यादी</div>
+    <div class="mitem" data-tab="quick">नवीन एंट्री</div>
+    <div class="mitem" data-tab="report">अहवाल</div>
+    <div class="mitem" data-tab="ad">जाहिरात</div>
+    <div class="mitem" data-tab="settings">सेटिंग</div>
+  </div>
+
+  <div class="content" id="pane-list">
+    <div id="promoArea"></div>
+    <div class="summary">
+      <div class="card"><p class="lbl">ग्राहकांकडून द्यायचे</p><p class="val give" id="totalGive">₹0</p></div>
+      <div class="card"><p class="lbl">तुम्ही देणे</p><p class="val get" id="totalGet">₹0</p></div>
+    </div>
+    <div class="searchrow"><input type="text" id="searchInput" placeholder="ग्राहकाचं नाव शोधा"></div>
+    <div class="sortrow">
+      <div class="sortbtn active" id="sortName">नावाने</div>
+      <div class="sortbtn" id="sortBal">जास्त बाकी आधी</div>
+    </div>
+    <div id="custList"></div>
+    <div class="empty" id="emptyMsg" style="display:none;">अजून एकही ग्राहक जोडलेला नाही.<br>खाली सोनेरी + बटण दाबून सुरुवात करा.</div>
+  </div>
+
+  <div class="content" id="pane-quick" style="display:none;">
+    <div class="adminpad">
+      <h4>नवीन ग्राहक जोडा</h4>
+      <div class="field"><label>ग्राहकाचं नाव</label><input type="text" id="qName" placeholder="उदा. रामराव पाटील"></div>
+      <div class="field"><label>फोन नंबर (ऐच्छिक)</label><input type="tel" id="qPhone" placeholder="उदा. 9876543210"></div>
+      <button class="btn primary wide" id="qAddCust">ग्राहक जोडा</button>
+    </div>
+    <div class="adminpad">
+      <h4>पटकन व्यवहार नोंदवा</h4>
+      <p class="hint">आधीच्या ग्राहकाची निवड करून लगेच उधार/भरणा नोंदवा.</p>
+      <div class="field"><label>ग्राहक निवडा</label><select id="qCustSelect" style="width:100%;padding:14px;border:2px solid var(--line);border-radius:8px;font-size:16px;background:var(--surface2);color:var(--white);"></select></div>
+      <div class="togglerow"><div class="togglebtn sel-give" id="qToggleGive">उधार दिलं</div><div class="togglebtn" id="qToggleGet">पैसे मिळाले</div></div>
+      <div class="field"><label>रक्कम (₹)</label><input type="number" id="qAmount" placeholder="0"></div>
+      <button class="btn primary wide" id="qAddTxn">नोंद करा</button>
+    </div>
+  </div>
+
+  <div class="content" id="pane-report" style="display:none;">
+    <div class="repcard"><p class="rtitle">एकूण नोंदणीकृत ग्राहक</p><p class="rval" id="repCustCount">0</p></div>
+    <div class="repcard"><p class="rtitle">एकूण द्यायचे आहेत (सगळ्या ग्राहकांकडून मिळून)</p><p class="rval give" id="repTotalGive">₹0</p></div>
+    <div class="repcard"><p class="rtitle">तुम्ही देणे (सगळे मिळून)</p><p class="rval get" id="repTotalGet">₹0</p></div>
+    <div class="repcard"><p class="rtitle">सर्वात जास्त बाकी असलेले ग्राहक</p><div id="repTopList"></div></div>
+    <div class="adminpad">
+      <h4>डेटाचा बॅकअप</h4>
+      <div class="sheetbtns">
+        <button class="btn ghost" id="exportBtn">बॅकअप डाउनलोड</button>
+        <button class="btn ghost" id="importBtnTrigger">बॅकअप परत आणा</button>
+      </div>
+      <input type="file" id="importFile" accept=".json" style="display:none;">
+    </div>
+  </div>
+
+  <div class="content" id="pane-ad" style="display:none;" id="adPaneWrap"></div>
+
+  <div class="content" id="pane-settings" style="display:none;">
+    <div class="adminpad">
+      <h4>दुकानाचं नाव</h4>
+      <div class="field"><input type="text" id="shopNameInput" placeholder="उदा. श्री गणेश जनरल स्टोअर"></div>
+    </div>
+    <div class="adminpad">
+      <h4>रिमाइंडर मजकूर</h4>
+      <div class="field"><textarea id="reminderInput" placeholder="नमस्कार, आपली उधारी बाकी आहे."></textarea></div>
+    </div>
+    <div class="adminpad">
+      <h4>पासवर्ड बदला</h4>
+      <div class="field"><input type="text" id="newShopPassInput" placeholder="नवीन पासवर्ड"></div>
+      <button class="btn ghost wide" id="changeShopPassBtn">पासवर्ड बदला</button>
+    </div>
+    <button class="btn primary wide" id="saveSettingsBtn">बदल जतन करा</button>
+    <p class="helpline">रिमाइंडर बटण दाबल्यावर WhatsApp उघडेल — तुम्ही स्वतः Send दाबल्यावरच जातो.</p>
+  </div>
+
+  <button class="fab" id="fabAdd">+</button>
+
+  <div class="overlay" id="addCustOverlay" style="display:none;">
+    <div class="sheet">
+      <h3>नवीन ग्राहक जोडा</h3>
+      <div class="field"><label>ग्राहकाचं नाव</label><input type="text" id="newCustName" placeholder="उदा. रामराव पाटील"></div>
+      <div class="err" id="nameErr">नाव टाका</div>
+      <div class="field"><label>फोन नंबर (ऐच्छिक)</label><input type="tel" id="newCustPhone" placeholder="उदा. 9876543210"></div>
+      <div class="sheetbtns"><button class="btn ghost" id="cancelAddCust">रद्द करा</button><button class="btn primary" id="saveCustBtn">जोडा</button></div>
+    </div>
+  </div>
+
+  <div class="overlay" id="custDetailOverlay" style="display:none;">
+    <div class="sheet">
+      <h3 id="detName"></h3>
+      <p style="font-size:14px;color:var(--muted);margin:-10px 0 16px;" id="detPhone"></p>
+      <div class="card" style="margin-bottom:18px;"><p class="lbl">सध्याची बाकी</p><p class="val" id="detBal"></p></div>
+      <div class="togglerow"><div class="togglebtn sel-give" id="toggleGive">उधार दिलं</div><div class="togglebtn" id="toggleGet">पैसे मिळाले</div></div>
+      <div class="field"><label>रक्कम (₹)</label><input type="number" id="txnAmount" placeholder="0"></div>
+      <div class="err" id="amtErr">योग्य रक्कम टाका</div>
+      <div class="field"><label>टीप (ऐच्छिक)</label><input type="text" id="txnNote" placeholder="उदा. तांदूळ, तेल"></div>
+      <div class="sheetbtns"><button class="btn ghost" id="closeDetail">बंद करा</button><button class="btn primary" id="addTxnBtn">नोंद करा</button></div>
+      <div class="sheetbtns" style="margin-top:12px;"><button class="btn ghost" id="reminderBtn">WhatsApp रिमाइंडर पाठवा</button></div>
+      <div class="sheetbtns" style="margin-top:10px;"><button class="btn danger" id="deleteCustBtn">हा ग्राहक काढून टाका</button></div>
+      <div class="hist"><h4>व्यवहार इतिहास</h4><div id="histList"></div></div>
+    </div>
+  </div>`;
+}
+
+function adPaneHTML(){
+  if(!shopData.adPermission){
+    return `<div class="lockmsg">
+      <p><b>तुम्हाला अजून स्वतःची जाहिरात तयार करण्याची परवानगी मिळालेली नाही.</b><br>ही परवानगी मिळवण्यासाठी ॲडमिनशी संपर्क साधा.</p>
+      <button class="btn primary wide" id="requestPermBtn">परवानगी मागा</button>
+    </div>`;
+  }
+  return `
+  <div class="adminpad">
+    <h4>तुमची स्वतःची जाहिरात</h4>
+    <p class="hint">ही फक्त तुमच्याच ग्राहकांना दिसेल.</p>
+    <div class="field"><label>शीर्षक</label><input type="text" id="promoTitleInput" placeholder="उदा. नवीन तांदूळ आवक झाली!"></div>
+    <div class="field"><label>उप-मजकूर</label><input type="text" id="promoSubInput" placeholder="उदा. आजपासून ₹40/किलो"></div>
+    <div class="field"><label>इमेज लिंक (ऐच्छिक)</label><input type="text" id="promoImgInput" placeholder="https://..."></div>
+    <div class="field"><label><input type="checkbox" id="promoActiveInput">बॅनर सक्रिय ठेवा</label></div>
+    <button class="btn primary wide" id="saveAdBtn">जाहिरात जतन करा</button>
+  </div>`;
+}
+
+function attachShop(){
+  if(document.getElementById('qsCustFromShop')){
+    document.getElementById('qsCustFromShop').onclick = ()=>{
+      demoReturn = {...session};
+      demoAsCustomer();
+    };
+  }
+  document.getElementById('logoutShop').onclick = async ()=>{
+    if(confirm('बाहेर पडायचं?')){
+      if(session.viaSuperAdmin){ session={role:'super'}; renderRoot(); }
+      else { session={role:null}; shopData=null; showFirstTimeSetup(); }
+    }
+  };
+  document.querySelectorAll('.mitem').forEach(t=>{
+    t.addEventListener('click', ()=>{
+      document.querySelectorAll('.mitem').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      currentTab = t.dataset.tab;
+      ['list','quick','report','ad','settings'].forEach(p=>{
+        document.getElementById('pane-'+p).style.display = (p===currentTab) ? 'block':'none';
+      });
+      if(currentTab==='ad'){ document.getElementById('pane-ad').innerHTML = adPaneHTML(); attachAdPane(); }
+      if(currentTab==='report'){ renderReport(); }
+      if(currentTab==='quick'){ fillQuickSelect(); }
+    });
+  });
+  document.getElementById('searchInput').addEventListener('input', renderShop);
+  document.getElementById('sortName').onclick = ()=>{ currentSort='name'; renderShop(); };
+  document.getElementById('sortBal').onclick = ()=>{ currentSort='bal'; renderShop(); };
+  document.getElementById('fabAdd').onclick = ()=>{
+    document.getElementById('newCustName').value='';
+    document.getElementById('newCustPhone').value='';
+    document.getElementById('nameErr').style.display='none';
+    document.getElementById('addCustOverlay').style.display='flex';
+  };
+  document.getElementById('cancelAddCust').onclick = ()=>{ document.getElementById('addCustOverlay').style.display='none'; };
+  document.getElementById('saveCustBtn').onclick = async ()=>{
+    const name = document.getElementById('newCustName').value.trim();
+    if(!name){ document.getElementById('nameErr').style.display='block'; return; }
+    shopData.customers.push({ id:'c'+Date.now(), name, phone:document.getElementById('newCustPhone').value.trim(), txns:[] });
+    await saveShop();
+    document.getElementById('addCustOverlay').style.display='none';
+    renderShop();
+  };
+  document.getElementById('closeDetail').onclick = ()=>{ document.getElementById('custDetailOverlay').style.display='none'; };
+  document.getElementById('toggleGive').onclick = ()=> setTxnType('give');
+  document.getElementById('toggleGet').onclick = ()=> setTxnType('get');
+  document.getElementById('addTxnBtn').onclick = addTxn;
+  document.getElementById('reminderBtn').onclick = sendReminder;
+  document.getElementById('deleteCustBtn').onclick = deleteCustomer;
+  document.getElementById('saveSettingsBtn').onclick = saveSettings;
+  document.getElementById('changeShopPassBtn').onclick = async ()=>{
+    const np = document.getElementById('newShopPassInput').value.trim();
+    if(!np){ alert('नवीन पासवर्ड टाका'); return; }
+    shopData.password = np;
+    await saveShop();
+    document.getElementById('newShopPassInput').value='';
+    alert('पासवर्ड बदलला!');
+  };
+  document.getElementById('exportBtn').onclick = exportData;
+  document.getElementById('importBtnTrigger').onclick = ()=> document.getElementById('importFile').click();
+  document.getElementById('importFile').onchange = importData;
+
+  document.getElementById('qAddCust').onclick = async ()=>{
+    const name = document.getElementById('qName').value.trim();
+    if(!name) return;
+    shopData.customers.push({ id:'c'+Date.now(), name, phone:document.getElementById('qPhone').value.trim(), txns:[] });
+    await saveShop();
+    document.getElementById('qName').value=''; document.getElementById('qPhone').value='';
+    fillQuickSelect(); renderShop();
+    alert('ग्राहक जोडला!');
+  };
+  document.getElementById('qToggleGive').onclick = ()=>{ currentTxnType='give'; document.getElementById('qToggleGive').className='togglebtn sel-give'; document.getElementById('qToggleGet').className='togglebtn'; };
+  document.getElementById('qToggleGet').onclick = ()=>{ currentTxnType='get'; document.getElementById('qToggleGet').className='togglebtn sel-get'; document.getElementById('qToggleGive').className='togglebtn'; };
+  document.getElementById('qAddTxn').onclick = async ()=>{
+    const custId = document.getElementById('qCustSelect').value;
+    const amt = parseFloat(document.getElementById('qAmount').value);
+    if(!custId || !amt || amt<=0){ alert('ग्राहक निवडा आणि योग्य रक्कम टाका.'); return; }
+    const c = shopData.customers.find(x=>x.id===custId);
+    const d = new Date();
+    c.txns.push({ type:currentTxnType, amount:amt, note:'', date: d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear() });
+    await saveShop();
+    document.getElementById('qAmount').value='';
+    renderShop();
+    alert('नोंद झाली!');
+  };
+  fillQuickSelect();
+}
+
+function fillQuickSelect(){
+  const sel = document.getElementById('qCustSelect');
+  if(!sel) return;
+  sel.innerHTML = shopData.customers.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+}
+
+function attachAdPane(){
+  if(shopData.adPermission){
+    document.getElementById('promoTitleInput').value = shopData.promo.title||'';
+    document.getElementById('promoSubInput').value = shopData.promo.sub||'';
+    document.getElementById('promoImgInput').value = shopData.promo.img||'';
+    document.getElementById('promoActiveInput').checked = !!shopData.promo.active;
+    document.getElementById('saveAdBtn').onclick = async ()=>{
+      shopData.promo = {
+        title: document.getElementById('promoTitleInput').value.trim(),
+        sub: document.getElementById('promoSubInput').value.trim(),
+        img: document.getElementById('promoImgInput').value.trim(),
+        active: document.getElementById('promoActiveInput').checked
+      };
+      await saveShop();
+      renderShop();
+      alert('जाहिरात जतन झाली!');
+    };
+  } else {
+    document.getElementById('requestPermBtn').onclick = ()=>{
+      alert('परवानगीची विनंती नोंदवली गेली. ॲडमिन तुमच्याशी संपर्क साधतील.');
+    };
+  }
+}
+
+function renderReport(){
+  document.getElementById('repCustCount').textContent = shopData.customers.length;
+  let totalGive=0, totalGet=0;
+  shopData.customers.forEach(c=>{ const b=balanceOf(c); if(b>0) totalGive+=b; else totalGet+=-b; });
+  document.getElementById('repTotalGive').textContent = fmt(totalGive);
+  document.getElementById('repTotalGet').textContent = fmt(totalGet);
+  const top = [...shopData.customers].sort((a,b)=>Math.abs(balanceOf(b))-Math.abs(balanceOf(a))).slice(0,5);
+  document.getElementById('repTopList').innerHTML = top.length===0 ? '<p style="color:var(--muted);font-size:14px;">डेटा नाही.</p>' :
+    top.map(c=>{ const b=balanceOf(c); return `<div class="directory-row"><span>${c.name}</span><span class="${b>0?'val give':'val get'}" style="font-size:15px;">${fmt(Math.abs(b))}</span></div>`; }).join('');
+}
+
+function renderShop(){
+  document.getElementById('shopNameInput').value = shopData.shopName || '';
+  document.getElementById('reminderInput').value = shopData.reminder || '';
+
+  let promoHTML = '';
+  if(platformPromo.active && platformPromo.title){
+    promoHTML += `<div class="promo platform">${platformPromo.img?`<img src="${platformPromo.img}">`:''}<div><p class="promo-tag">प्लॅटफॉर्म ऑफर</p><p class="promo-title">${platformPromo.title}</p><p class="promo-sub">${platformPromo.sub||''}</p></div></div>`;
+  }
+  if(shopData.adPermission && shopData.promo.active && shopData.promo.title){
+    promoHTML += `<div class="promo shop">${shopData.promo.img?`<img src="${shopData.promo.img}">`:''}<div><p class="promo-tag">दुकानाची जाहिरात</p><p class="promo-title">${shopData.promo.title}</p><p class="promo-sub">${shopData.promo.sub||''}</p></div></div>`;
+  }
+  document.getElementById('promoArea').innerHTML = promoHTML;
+
+  let totalGive=0, totalGet=0;
+  shopData.customers.forEach(c=>{ const b=balanceOf(c); if(b>0) totalGive+=b; else totalGet+=-b; });
+  document.getElementById('totalGive').textContent = fmt(totalGive);
+  document.getElementById('totalGet').textContent = fmt(totalGet);
+
+  document.getElementById('sortName').classList.toggle('active', currentSort==='name');
+  document.getElementById('sortBal').classList.toggle('active', currentSort==='bal');
+
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  let filtered = shopData.customers.filter(c=> c.name.toLowerCase().includes(q));
+  if(currentSort==='name'){ filtered.sort((a,b)=>a.name.localeCompare(b.name,'mr')); }
+  else { filtered.sort((a,b)=> Math.abs(balanceOf(b)) - Math.abs(balanceOf(a))); }
+
+  document.getElementById('emptyMsg').style.display = shopData.customers.length===0 ? 'block':'none';
+  const list = document.getElementById('custList');
+  list.innerHTML = '';
+  filtered.forEach(c=>{
+    const b = balanceOf(c);
+    const initials = c.name.trim().split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    const div = document.createElement('div');
+    div.className='cust';
+    div.onclick = ()=> openCustDetail(c.id);
+    div.innerHTML = `<div class="avatar">${initials}</div><div class="cust-info"><p class="cust-name">${c.name}</p><p class="cust-phone">${c.phone||'फोन नंबर नाही'}</p></div><div class="cust-bal ${b>0?'give':(b<0?'get':'zero')}">${b===0?'बाकी नाही':fmt(Math.abs(b))}</div>`;
+    list.appendChild(div);
+  });
+}
+
+function setTxnType(t){
+  currentTxnType = t;
+  document.getElementById('toggleGive').className = 'togglebtn' + (t==='give'?' sel-give':'');
+  document.getElementById('toggleGet').className = 'togglebtn' + (t==='get'?' sel-get':'');
+}
+
+function openCustDetail(id){
+  currentCustId = id;
+  const c = shopData.customers.find(x=>x.id===id);
+  document.getElementById('detName').textContent = c.name;
+  document.getElementById('detPhone').textContent = c.phone || 'फोन नंबर नोंदवलेला नाही';
+  const b = balanceOf(c);
+  const balEl = document.getElementById('detBal');
+  balEl.textContent = b===0 ? '₹0 (हिशोब बरोबर)' : fmt(Math.abs(b)) + (b>0?' (द्यायचे आहेत)':' (तुम्ही देणे)');
+  balEl.className = 'val ' + (b>0?'give':(b<0?'get':''));
+  document.getElementById('txnAmount').value='';
+  document.getElementById('txnNote').value='';
+  document.getElementById('amtErr').style.display='none';
+  setTxnType('give');
+  const hl = document.getElementById('histList');
+  if(c.txns.length===0){ hl.innerHTML = '<p style="font-size:14px;color:var(--muted);">अजून व्यवहार नाही.</p>'; }
+  else {
+    hl.innerHTML = [...c.txns].reverse().map(t=>
+      `<div class="histrow"><div><div>${t.note||(t.type==='give'?'उधार':'भरणा')}</div><div class="h-date">${t.date}</div></div><div class="h-amt ${t.type}">${t.type==='give'?'+':'-'}${fmt(t.amount)}</div></div>`
+    ).join('');
+  }
+  document.getElementById('custDetailOverlay').style.display='flex';
+}
+
+async function addTxn(){
+  const amt = parseFloat(document.getElementById('txnAmount').value);
+  if(!amt || amt<=0){ document.getElementById('amtErr').style.display='block'; return; }
+  document.getElementById('amtErr').style.display='none';
+  const c = shopData.customers.find(x=>x.id===currentCustId);
+  const note = document.getElementById('txnNote').value.trim();
+  const d = new Date();
+  c.txns.push({ type:currentTxnType, amount:amt, note, date: d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear() });
+  await saveShop();
+  openCustDetail(currentCustId);
+  renderShop();
+}
+
+async function deleteCustomer(){
+  if(!confirm('या ग्राहकाचा संपूर्ण हिशोब कायमचा काढून टाकायचा आहे का?')) return;
+  shopData.customers = shopData.customers.filter(x=>x.id!==currentCustId);
+  await saveShop();
+  document.getElementById('custDetailOverlay').style.display='none';
+  renderShop();
+}
+
+function sendReminder(){
+  const c = shopData.customers.find(x=>x.id===currentCustId);
+  if(!c.phone){ alert('या ग्राहकाचा फोन नंबर नोंदवलेला नाही.'); return; }
+  const b = balanceOf(c);
+  const msg = (shopData.reminder || 'नमस्कार, आपली उधारी बाकी आहे.') + ' रक्कम: ' + fmt(Math.abs(b));
+  window.open('https://wa.me/91'+c.phone.replace(/\D/g,'')+'?text='+encodeURIComponent(msg), '_blank');
+}
+
+async function saveSettings(){
+  shopData.shopName = document.getElementById('shopNameInput').value.trim() || 'माझं दुकान';
+  shopData.reminder = document.getElementById('reminderInput').value.trim();
+  await saveShop();
+  const dir = await loadDirectory();
+  const idx = dir.findIndex(d=>d.id===shopData.id);
+  if(idx>=0){ dir[idx].name = shopData.shopName; await saveDirectory(dir); }
+  document.querySelector('.topbar h1').textContent = shopData.shopName;
+  alert('जतन झालं!');
+}
+
+function exportData(){
+  const blob = new Blob([JSON.stringify(shopData,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='khata-backup-'+shopData.id+'.json'; a.click();
+}
+function importData(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async function(ev){
+    try{
+      const imported = JSON.parse(ev.target.result);
+      shopData = imported;
+      await saveShop();
+      renderShop();
+      alert('बॅकअप यशस्वीरित्या परत आणला!');
+    }catch(err){ alert('फाईल चुकीची आहे.'); }
+  };
+  reader.readAsText(file);
+}
+
+initApp();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
